@@ -11,25 +11,25 @@ import type {
 export const mockUsers: User[] = [
   {
     id: 'u1',
-    email: 'manager@fleetflow.in',
+    email: 'manager@roadmatrix.in',
     name: 'Rajesh Sharma',
     role: 'fleet_manager',
   },
   {
     id: 'u2',
-    email: 'dispatcher@fleetflow.in',
+    email: 'dispatcher@roadmatrix.in',
     name: 'Priya Nair',
     role: 'dispatcher',
   },
   {
     id: 'u3',
-    email: 'safety@fleetflow.in',
+    email: 'safety@roadmatrix.in',
     name: 'Anil Verma',
     role: 'safety_officer',
   },
   {
     id: 'u4',
-    email: 'finance@fleetflow.in',
+    email: 'finance@roadmatrix.in',
     name: 'Kavita Iyer',
     role: 'financial_analyst',
   },
@@ -212,7 +212,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd1',
     name: 'Suresh Kumar',
-    email: 'suresh.kumar@fleetflow.in',
+    email: 'suresh.kumar@roadmatrix.in',
     phone: '+91-98765-01010',
     licenseNumber: 'DL-03-2020-001',
     licenseExpiry: '2027-08-12',
@@ -226,7 +226,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd2',
     name: 'Rahul Yadav',
-    email: 'rahul.yadav@fleetflow.in',
+    email: 'rahul.yadav@roadmatrix.in',
     phone: '+91-98201-02020',
     licenseNumber: 'MH-12-2019-114',
     licenseExpiry: '2026-05-20',
@@ -240,7 +240,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd3',
     name: 'Amit Singh',
-    email: 'amit.singh@fleetflow.in',
+    email: 'amit.singh@roadmatrix.in',
     phone: '+91-98111-03030',
     licenseNumber: 'DL-08-2018-332',
     licenseExpiry: '2026-12-10',
@@ -254,7 +254,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd4',
     name: 'Manoj Pillai',
-    email: 'manoj.pillai@fleetflow.in',
+    email: 'manoj.pillai@roadmatrix.in',
     phone: '+91-99777-04040',
     licenseNumber: 'KA-01-2021-556',
     licenseExpiry: '2027-09-03',
@@ -268,7 +268,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd5',
     name: 'Imran Shaikh',
-    email: 'imran.shaikh@fleetflow.in',
+    email: 'imran.shaikh@roadmatrix.in',
     phone: '+91-98989-05050',
     licenseNumber: 'MH-01-2020-778',
     licenseExpiry: '2026-11-15',
@@ -282,7 +282,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd6',
     name: 'Vijay Reddy',
-    email: 'vijay.reddy@fleetflow.in',
+    email: 'vijay.reddy@roadmatrix.in',
     phone: '+91-90000-06060',
     licenseNumber: 'TS-09-2019-221',
     licenseExpiry: '2025-10-30',
@@ -296,7 +296,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd7',
     name: 'Harpreet Kaur',
-    email: 'harpreet.kaur@fleetflow.in',
+    email: 'harpreet.kaur@roadmatrix.in',
     phone: '+91-98188-07070',
     licenseNumber: 'PB-10-2017-909',
     licenseExpiry: '2028-01-20',
@@ -310,7 +310,7 @@ export const mockDrivers: Driver[] = [
   {
     id: 'd8',
     name: 'Sneha Patil',
-    email: 'sneha.patil@fleetflow.in',
+    email: 'sneha.patil@roadmatrix.in',
     phone: '+91-97676-08080',
     licenseNumber: 'MH-15-2022-443',
     licenseExpiry: '2027-07-08',

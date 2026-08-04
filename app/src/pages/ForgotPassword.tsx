@@ -32,7 +32,7 @@ export function ForgotPassword({ onBack, onGoToReset }: ForgotPasswordProps) {
       if (res.resetUrl) setResetUrl(res.resetUrl);
       if (res.token) {
         setToken(res.token);
-        sessionStorage.setItem('fleetflow_reset_token', res.token);
+        sessionStorage.setItem('roadmatrix_reset_token', res.token);
       }
     } catch (err) {
       setError((err as Error).message);
@@ -43,7 +43,7 @@ export function ForgotPassword({ onBack, onGoToReset }: ForgotPasswordProps) {
 
   const handleGoToReset = () => {
     if (token) {
-      sessionStorage.setItem('fleetflow_reset_token', token);
+      sessionStorage.setItem('roadmatrix_reset_token', token);
     }
     onGoToReset?.();
   };

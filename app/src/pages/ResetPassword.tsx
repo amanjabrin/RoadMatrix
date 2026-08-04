@@ -35,7 +35,7 @@ export function ResetPassword({ token, onBack, onSuccess }: ResetPasswordProps) 
     try {
       await api.resetPassword(token, password);
       setSuccess(true);
-      sessionStorage.removeItem('fleetflow_reset_token');
+      sessionStorage.removeItem('roadmatrix_reset_token');
       setTimeout(() => onSuccess(), 1500);
     } catch (err) {
       setError((err as Error).message);

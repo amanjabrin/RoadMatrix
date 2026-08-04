@@ -199,7 +199,7 @@ export function Expenses() {
               const v = getVehicleById(log.vehicleId);
               return `<tr><td>${formatDate(log.date)}</td><td>${v?.name ?? ''}</td><td>${v?.licensePlate ?? ''}</td><td>${log.station ?? ''}</td><td>${log.liters}</td><td>₹${log.cost}</td><td>${log.odometerReading}</td></tr>`;
             }).join('');
-            const html = `<!DOCTYPE html><html><head><title>Fuel Logs ${date}</title></head><body><h1>FleetFlow Fuel & Expense Logs</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Date</th><th>Vehicle</th><th>License</th><th>Station</th><th>Liters</th><th>Cost (₹)</th><th>Odometer</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const html = `<!DOCTYPE html><html><head><title>Fuel Logs ${date}</title></head><body><h1>RoadMatrix Fuel & Expense Logs</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Date</th><th>Vehicle</th><th>License</th><th>Station</th><th>Liters</th><th>Cost (₹)</th><th>Odometer</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
             const printWin = window.open('', '_blank');
             if (printWin) {
               printWin.document.write(html);

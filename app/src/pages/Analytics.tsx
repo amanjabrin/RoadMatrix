@@ -165,7 +165,7 @@ export function Analytics() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `fleetflow-report-${date}.csv`;
+      a.download = `roadmatrix-report-${date}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       setExportMessage('CSV downloaded successfully!');
@@ -184,10 +184,10 @@ export function Analytics() {
         })
         .join('');
       printWindow.document.write(`
-        <!DOCTYPE html><html><head><title>FleetFlow Report ${date}</title>
+        <!DOCTYPE html><html><head><title>RoadMatrix Report ${date}</title>
         <style>body{font-family:sans-serif;padding:20px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:8px;text-align:left;} th{background:#1a1d24;color:#fff;}</style>
         </head><body>
-        <h1>FleetFlow Operational Report</h1>
+        <h1>RoadMatrix Operational Report</h1>
         <p>Generated: ${new Date().toLocaleString()}</p>
         <h2>Fleet Summary</h2>
         <p>Revenue: ₹${fleetMetrics.totalRevenue.toFixed(0)} | Costs: ₹${fleetMetrics.totalOperationalCost.toFixed(0)} | ROI: ${fleetMetrics.fleetROI.toFixed(1)}%</p>

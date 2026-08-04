@@ -14,7 +14,7 @@ export function Login({ onForgotPassword }: LoginProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { login } = useFleet();
   const isDark = resolvedTheme !== 'light';
-  const [email, setEmail] = useState('admin@fleetflow.in');
+  const [email, setEmail] = useState('admin@roadmatrix.in');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -73,7 +73,7 @@ export function Login({ onForgotPassword }: LoginProps) {
             <div className="w-16 h-16 rounded-2xl bg-[#30F2FF]/10 flex items-center justify-center mb-4">
               <Truck className="w-8 h-8 text-[#30F2FF]" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Sign in to FleetFlow</h1>
+            <h1 className="text-2xl font-bold text-foreground">Sign in to RoadMatrix</h1>
             <p className="text-sm text-muted-foreground mt-1">Fleet operations, simplified.</p>
           </div>
 

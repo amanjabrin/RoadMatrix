@@ -6,7 +6,7 @@ import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="fleetflow-theme">
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem storageKey="roadmatrix-theme">
       <App />
     </ThemeProvider>
   </StrictMode>,

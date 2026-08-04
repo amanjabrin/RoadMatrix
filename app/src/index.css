@@ -17,7 +17,7 @@
     --sidebar-ring: 183 100% 59%;
   }
 
-  /* FleetFlow Dark Theme (default) */
+  /* RoadMatrix Dark Theme (default) */
   .dark,
   :root {
     --background: 220 14% 4%;
@@ -50,7 +50,7 @@
     --fleet-danger: 348 100% 65%;
   }
 
-  /* FleetFlow Light Theme */
+  /* RoadMatrix Light Theme */
   .light {
     --background: 0 0% 98%;
     --foreground: 220 14% 12%;

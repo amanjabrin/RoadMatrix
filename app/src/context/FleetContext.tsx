@@ -240,7 +240,7 @@ function normalizeFuel(f: any): FuelLog {
 
 const loadSavedSession = (): Partial<FleetState> => {
   try {
-    const saved = localStorage.getItem('fleetflow_session');
+    const saved = localStorage.getItem('roadmatrix_session');
     if (saved && api.isAuthenticated()) {
       const user = JSON.parse(saved) as User;
       return { currentUser: user, isAuthenticated: true };
@@ -293,7 +293,7 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
     try {
       const user = await api.login(email, password);
       const u: User = { id: user.id, email: user.email, name: user.name, role: user.role as UserRole };
-      localStorage.setItem('fleetflow_session', JSON.stringify(u));
+      localStorage.setItem('roadmatrix_session', JSON.stringify(u));
       dispatch({ type: 'LOGIN', payload: u });
       await loadData();
       return true;
@@ -305,14 +305,14 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     api.logout();
-    localStorage.removeItem('fleetflow_session');
+    localStorage.removeItem('roadmatrix_session');
     dispatch({ type: 'LOGOUT' });
   }, []);
 
   const hasRole = useCallback((roles: UserRole[]): boolean => {
     if (!state.currentUser) return false;
     // Super Admin or manager bypasses all checks to have full rights
-    if (state.currentUser.email === 'admin@fleetflow.in' || state.currentUser.role === 'fleet_manager') return true;
+    if (state.currentUser.email === 'admin@roadmatrix.in' || state.currentUser.role === 'fleet_manager') return true;
     return roles.includes(state.currentUser.role);
   }, [state.currentUser]);
 

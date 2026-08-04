@@ -258,7 +258,7 @@ export function VehicleRegistry() {
           <Button variant="outline" size="sm" onClick={() => {
             const date = new Date().toISOString().slice(0, 10);
             const rows = filteredVehicles.map(v => `<tr><td>${v.name}</td><td>${v.model}</td><td>${v.licensePlate}</td><td>${v.type}</td><td>${v.status}</td><td>${formatNumber(v.odometer)}</td><td>${formatNumber(v.maxLoadCapacity)}</td><td>₹${formatNumber(v.acquisitionCost ?? 0)}</td><td>${v.fuelType}</td><td>${v.region ?? ''}</td><td>${v.year}</td></tr>`).join('');
-            const html = `<!DOCTYPE html><html><head><title>Vehicles ${date}</title></head><body><h1>FleetFlow Vehicle Registry</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Name</th><th>Model</th><th>License</th><th>Type</th><th>Status</th><th>Odometer</th><th>Max Load</th><th>Cost (₹)</th><th>Fuel</th><th>Region</th><th>Year</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const html = `<!DOCTYPE html><html><head><title>Vehicles ${date}</title></head><body><h1>RoadMatrix Vehicle Registry</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Name</th><th>Model</th><th>License</th><th>Type</th><th>Status</th><th>Odometer</th><th>Max Load</th><th>Cost (₹)</th><th>Fuel</th><th>Region</th><th>Year</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
             const printWin = window.open('', '_blank');
             if (printWin) {
               printWin.document.write(html);

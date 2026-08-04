@@ -48,7 +48,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             <Truck className="w-5 h-5 text-[#30F2FF]" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">FleetFlow</h1>
+            <h1 className="text-lg font-bold text-foreground">RoadMatrix</h1>
             <p className="text-xs text-muted-foreground">Fleet Management</p>
           </div>
         </div>

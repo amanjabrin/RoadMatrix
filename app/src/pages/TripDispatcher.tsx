@@ -223,7 +223,7 @@ export function TripDispatcher() {
               const d = getDriverById(t.driverId);
               return `<tr><td>${t.id}</td><td>${v?.name ?? ''}</td><td>${d?.name ?? ''}</td><td>${t.origin}</td><td>${t.destination}</td><td>${t.status}</td><td>${t.cargoWeight}</td><td>${t.distance ?? ''}</td><td>₹${t.revenue ?? 0}</td><td>${t.createdAt ? formatDate(t.createdAt) : ''}</td></tr>`;
             }).join('');
-            const html = `<!DOCTYPE html><html><head><title>Trips ${date}</title></head><body><h1>FleetFlow Trip Dispatcher</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>ID</th><th>Vehicle</th><th>Driver</th><th>Origin</th><th>Destination</th><th>Status</th><th>Cargo (kg)</th><th>Distance</th><th>Revenue (₹)</th><th>Created</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const html = `<!DOCTYPE html><html><head><title>Trips ${date}</title></head><body><h1>RoadMatrix Trip Dispatcher</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>ID</th><th>Vehicle</th><th>Driver</th><th>Origin</th><th>Destination</th><th>Status</th><th>Cargo (kg)</th><th>Distance</th><th>Revenue (₹)</th><th>Created</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
             const printWin = window.open('', '_blank');
             if (printWin) {
               printWin.document.write(html);

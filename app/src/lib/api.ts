@@ -28,39 +28,39 @@ function setStorage<T>(key: string, value: T) {
 }
 
 // Initialize and retrieve localStorage states
-const getVehicles = () => getStorage('fleetflow_vehicles', mockVehicles);
-const setVehicles = (data: typeof mockVehicles) => setStorage('fleetflow_vehicles', data);
+const getVehicles = () => getStorage('roadmatrix_vehicles', mockVehicles);
+const setVehicles = (data: typeof mockVehicles) => setStorage('roadmatrix_vehicles', data);
 
-const getDrivers = () => getStorage('fleetflow_drivers', mockDrivers);
-const setDrivers = (data: typeof mockDrivers) => setStorage('fleetflow_drivers', data);
+const getDrivers = () => getStorage('roadmatrix_drivers', mockDrivers);
+const setDrivers = (data: typeof mockDrivers) => setStorage('roadmatrix_drivers', data);
 
-const getTrips = () => getStorage('fleetflow_trips', mockTrips);
-const setTrips = (data: typeof mockTrips) => setStorage('fleetflow_trips', data);
+const getTrips = () => getStorage('roadmatrix_trips', mockTrips);
+const setTrips = (data: typeof mockTrips) => setStorage('roadmatrix_trips', data);
 
-const getMaintenance = () => getStorage('fleetflow_maintenance', mockMaintenanceLogs);
-const setMaintenance = (data: typeof mockMaintenanceLogs) => setStorage('fleetflow_maintenance', data);
+const getMaintenance = () => getStorage('roadmatrix_maintenance', mockMaintenanceLogs);
+const setMaintenance = (data: typeof mockMaintenanceLogs) => setStorage('roadmatrix_maintenance', data);
 
-const getFuel = () => getStorage('fleetflow_fuel', mockFuelLogs);
-const setFuel = (data: typeof mockFuelLogs) => setStorage('fleetflow_fuel', data);
+const getFuel = () => getStorage('roadmatrix_fuel', mockFuelLogs);
+const setFuel = (data: typeof mockFuelLogs) => setStorage('roadmatrix_fuel', data);
 
 export async function login(email: string, password?: string) {
   const user = {
     id: 'admin',
-    email: 'admin@fleetflow.in',
+    email: 'admin@roadmatrix.in',
     name: 'Super Admin',
     role: 'fleet_manager' as const,
   };
-  localStorage.setItem('fleetflow_token', 'mock-token-admin');
+  localStorage.setItem('roadmatrix_token', 'mock-token-admin');
   return user;
 }
 
 export function logout() {
-  localStorage.removeItem('fleetflow_token');
-  localStorage.removeItem('fleetflow_session');
+  localStorage.removeItem('roadmatrix_token');
+  localStorage.removeItem('roadmatrix_session');
 }
 
 export function isAuthenticated(): boolean {
-  return !!localStorage.getItem('fleetflow_token');
+  return !!localStorage.getItem('roadmatrix_token');
 }
 
 export async function forgotPassword(email: string) {

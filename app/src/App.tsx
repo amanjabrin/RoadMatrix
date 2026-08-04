@@ -66,7 +66,7 @@ function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get('resetToken');
-    const tokenFromStorage = sessionStorage.getItem('fleetflow_reset_token');
+    const tokenFromStorage = sessionStorage.getItem('roadmatrix_reset_token');
     if (tokenFromUrl) {
       setResetToken(tokenFromUrl);
       setAuthPage('reset');
@@ -84,7 +84,7 @@ function AppContent() {
           onBack={() => {
             setAuthPage('login');
             setResetToken(null);
-            sessionStorage.removeItem('fleetflow_reset_token');
+            sessionStorage.removeItem('roadmatrix_reset_token');
           }}
           onSuccess={() => setAuthPage('login')}
         />
@@ -94,12 +94,12 @@ function AppContent() {
       return (
         <ForgotPassword
           onBack={() => {
-            sessionStorage.removeItem('fleetflow_reset_token');
+            sessionStorage.removeItem('roadmatrix_reset_token');
             setResetToken(null);
             setAuthPage('login');
           }}
           onGoToReset={() => {
-            const t = sessionStorage.getItem('fleetflow_reset_token');
+            const t = sessionStorage.getItem('roadmatrix_reset_token');
             if (t) {
               setResetToken(t);
               setAuthPage('reset');

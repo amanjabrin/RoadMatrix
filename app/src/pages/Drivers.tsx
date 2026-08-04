@@ -237,7 +237,7 @@ export function Drivers() {
               <Button variant="outline" size="sm" onClick={() => {
                 const date = new Date().toISOString().slice(0, 10);
                 const rows = filteredDrivers.map(d => `<tr><td>${d.name}</td><td>${d.email}</td><td>${d.phone}</td><td>${d.licenseNumber}</td><td>${formatDate(d.licenseExpiry)}</td><td>${d.status}</td><td>${d.safetyScore}</td><td>${d.totalTrips}</td><td>${d.completedTrips}</td></tr>`).join('');
-                const html = `<!DOCTYPE html><html><head><title>Drivers ${date}</title></head><body><h1>FleetFlow Drivers</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>License</th><th>Expiry</th><th>Status</th><th>Safety</th><th>Trips</th><th>Completed</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+                const html = `<!DOCTYPE html><html><head><title>Drivers ${date}</title></head><body><h1>RoadMatrix Drivers</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>License</th><th>Expiry</th><th>Status</th><th>Safety</th><th>Trips</th><th>Completed</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
                 const printWin = window.open('', '_blank');
                 if (printWin) {
                   printWin.document.write(html);

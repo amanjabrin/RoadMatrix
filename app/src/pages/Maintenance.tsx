@@ -157,7 +157,7 @@ export function Maintenance() {
               const v = getVehicleById(log.vehicleId);
               return `<tr><td>${v?.name ?? ''}</td><td>${v?.licensePlate ?? ''}</td><td>${getTypeLabel(log.type)}</td><td>${log.description ?? ''}</td><td>${log.status}</td><td>${formatDate(log.scheduledDate)}</td><td>${log.completedDate ? formatDate(log.completedDate) : '-'}</td><td>₹${log.cost ?? 0}</td><td>${log.serviceProvider ?? ''}</td></tr>`;
             }).join('');
-            const html = `<!DOCTYPE html><html><head><title>Maintenance ${date}</title></head><body><h1>FleetFlow Maintenance & Service Logs</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Vehicle</th><th>License</th><th>Type</th><th>Description</th><th>Status</th><th>Scheduled</th><th>Completed</th><th>Cost (₹)</th><th>Service Provider</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const html = `<!DOCTYPE html><html><head><title>Maintenance ${date}</title></head><body><h1>RoadMatrix Maintenance & Service Logs</h1><p>Generated: ${new Date().toLocaleString()}</p><table border="1"><thead><tr><th>Vehicle</th><th>License</th><th>Type</th><th>Description</th><th>Status</th><th>Scheduled</th><th>Completed</th><th>Cost (₹)</th><th>Service Provider</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
             const printWin = window.open('', '_blank');
             if (printWin) {
               printWin.document.write(html);

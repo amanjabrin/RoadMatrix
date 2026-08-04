@@ -1,4 +1,4 @@
-// FleetFlow Type Definitions
+// RoadMatrix Type Definitions
 
 // User Roles for RBAC
 export type UserRole = 'fleet_manager' | 'dispatcher' | 'safety_officer' | 'financial_analyst';
