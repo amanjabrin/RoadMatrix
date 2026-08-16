@@ -1,57 +1,53 @@
-import {
-  mockVehicles,
-  mockDrivers,
-  mockTrips,
-  mockMaintenanceLogs,
-  mockFuelLogs,
-  mockUsers,
-} from '@/data/mockData';
+const BASE_URL = 'http://localhost:8080';
 
-// Helper to get/set localStorage data
-function getStorage<T>(key: string, initial: T): T {
-  const data = localStorage.getItem(key);
-  if (!data) {
-    localStorage.setItem(key, JSON.stringify(initial));
-    return initial;
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem('roadmatrix_token');
+  const headers = new Headers(options.headers || {});
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
-  try {
-    return JSON.parse(data) as T;
-  } catch (e) {
-    localStorage.setItem(key, JSON.stringify(initial));
-    return initial;
+  if (options.body && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
   }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    let errMsg = `Request failed: ${response.status} ${response.statusText}`;
+    try {
+      const errBody = await response.json();
+      if (errBody && errBody.message) {
+        errMsg = errBody.message;
+      }
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+  const text = await response.text();
+  return text ? (JSON.parse(text) as T) : ({} as T);
 }
-
-// Helper to set localStorage data
-function setStorage<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-// Initialize and retrieve localStorage states
-const getVehicles = () => getStorage('roadmatrix_vehicles', mockVehicles);
-const setVehicles = (data: typeof mockVehicles) => setStorage('roadmatrix_vehicles', data);
-
-const getDrivers = () => getStorage('roadmatrix_drivers', mockDrivers);
-const setDrivers = (data: typeof mockDrivers) => setStorage('roadmatrix_drivers', data);
-
-const getTrips = () => getStorage('roadmatrix_trips', mockTrips);
-const setTrips = (data: typeof mockTrips) => setStorage('roadmatrix_trips', data);
-
-const getMaintenance = () => getStorage('roadmatrix_maintenance', mockMaintenanceLogs);
-const setMaintenance = (data: typeof mockMaintenanceLogs) => setStorage('roadmatrix_maintenance', data);
-
-const getFuel = () => getStorage('roadmatrix_fuel', mockFuelLogs);
-const setFuel = (data: typeof mockFuelLogs) => setStorage('roadmatrix_fuel', data);
 
 export async function login(email: string, password?: string) {
-  const user = {
-    id: 'admin',
-    email: 'admin@roadmatrix.in',
-    name: 'Super Admin',
-    role: 'fleet_manager' as const,
+  const res = await request<{ token: string; email: string; name: string; role: string; companyId: string }>(
+    '/api/v1/auth/login',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, password: password || 'password' }),
+    }
+  );
+  localStorage.setItem('roadmatrix_token', res.token);
+  return {
+    id: res.companyId,
+    email: res.email,
+    name: res.name,
+    role: res.role as any,
   };
-  localStorage.setItem('roadmatrix_token', 'mock-token-admin');
-  return user;
 }
 
 export function logout() {
@@ -64,234 +60,190 @@ export function isAuthenticated(): boolean {
 }
 
 export async function forgotPassword(email: string) {
-  return { detail: 'Password reset link sent.', token: 'mock-reset-token' };
+  console.log("Requested password reset for: " + email);
+  return {
+    detail: 'Password reset link sent.',
+    token: 'mock-reset-token',
+    resetUrl: '/reset-password?token=mock-reset-token'
+  };
 }
 
 export async function resetPassword(token: string, newPassword: string) {
+  console.log("Resetting password for token: " + token + " with new password: " + newPassword);
   return { detail: 'Password reset successful.' };
 }
 
-// Vehicles API mocks
+// Vehicles API
 export async function fetchVehicles() {
-  return getVehicles();
+  return request<any[]>('/api/v1/fleet/vehicles');
 }
 
 export async function createVehicle(body: Record<string, unknown>) {
-  const list = getVehicles();
-  const newVehicle = {
-    id: 'v_' + Math.random().toString(36).substr(2, 9),
-    name: String(body.name),
-    model: String(body.model),
-    licensePlate: String(body.licensePlate),
-    type: body.type as any,
-    maxLoadCapacity: Number(body.maxLoadCapacity),
-    odometer: Number(body.odometer || 0),
-    status: 'available' as const,
-    acquisitionCost: Number(body.acquisitionCost || 0),
-    year: Number(body.year || new Date().getFullYear()),
-    fuelType: (body.fuelType || 'diesel') as any,
-    region: String(body.region || 'West'),
-  };
-  list.push(newVehicle);
-  setVehicles(list);
-  return newVehicle;
+  return request<any>('/api/v1/fleet/vehicles', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function updateVehicle(id: string, body: Record<string, unknown>) {
-  const list = getVehicles();
-  const idx = list.findIndex(v => String(v.id) === String(id));
-  if (idx !== -1) {
-    list[idx] = { ...list[idx], ...body } as any;
-    setVehicles(list);
-    return list[idx];
-  }
-  throw new Error('Vehicle not found');
+  return request<any>(`/api/v1/fleet/vehicles/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function deleteVehicle(id: string) {
-  const list = getVehicles();
-  const filtered = list.filter(v => String(v.id) !== String(id));
-  setVehicles(filtered);
+  return request<void>(`/api/v1/fleet/vehicles/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 export async function setVehicleStatus(id: string, status: string) {
-  const list = getVehicles();
-  const idx = list.findIndex(v => String(v.id) === String(id));
-  if (idx !== -1) {
-    list[idx].status = status as any;
-    setVehicles(list);
-    return list[idx];
-  }
-  throw new Error('Vehicle not found');
+  return request<any>(`/api/v1/fleet/vehicles/${id}/status?status=${status}`, {
+    method: 'PUT',
+  });
 }
 
-// Drivers API mocks
+// Drivers API
 export async function fetchDrivers() {
-  return getDrivers();
+  return request<any[]>('/api/v1/driver');
 }
 
 export async function createDriver(body: Record<string, unknown>) {
-  const list = getDrivers();
-  const newDriver = {
-    id: 'd_' + Math.random().toString(36).substr(2, 9),
-    name: String(body.name),
-    email: String(body.email),
-    phone: String(body.phone),
-    licenseNumber: String(body.licenseNumber),
-    licenseExpiry: String(body.licenseExpiry),
-    licenseCategories: (body.licenseCategories || []) as any,
-    status: 'on_duty' as const,
-    safetyScore: 95,
-    joinDate: new Date().toISOString().split('T')[0],
-    totalTrips: 0,
-    completedTrips: 0,
-  };
-  list.push(newDriver);
-  setDrivers(list);
-  return newDriver;
+  return request<any>('/api/v1/driver', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function updateDriver(id: string, body: Record<string, unknown>) {
-  const list = getDrivers();
-  const idx = list.findIndex(d => String(d.id) === String(id));
-  if (idx !== -1) {
-    list[idx] = { ...list[idx], ...body } as any;
-    setDrivers(list);
-    return list[idx];
-  }
-  throw new Error('Driver not found');
+  return request<any>(`/api/v1/driver/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function setDriverStatus(id: string, status: string) {
-  const list = getDrivers();
-  const idx = list.findIndex(d => String(d.id) === String(id));
-  if (idx !== -1) {
-    list[idx].status = status as any;
-    setDrivers(list);
-    return list[idx];
-  }
-  throw new Error('Driver not found');
+  return request<any>(`/api/v1/driver/${id}/status?status=${status}`, {
+    method: 'PUT',
+  });
 }
 
-// Trips API mocks
+// Trips API
 export async function fetchTrips() {
-  return getTrips();
+  return request<any[]>('/api/v1/trip');
 }
 
 export async function createTrip(body: Record<string, unknown>) {
-  const list = getTrips();
-  const newTrip = {
-    id: 't_' + Math.random().toString(36).substr(2, 9),
-    vehicleId: String(body.vehicleId),
-    driverId: String(body.driverId),
-    cargoWeight: Number(body.cargoWeight || 0),
-    origin: String(body.origin),
-    destination: String(body.destination),
-    status: 'draft' as const,
-    createdAt: new Date().toISOString(),
-    distance: 250, // default placeholder
-    revenue: 35000, // default placeholder
-  };
-  list.push(newTrip);
-  setTrips(list);
-  return newTrip;
+  return request<any>('/api/v1/trip', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function updateTrip(id: string, body: Record<string, unknown>) {
-  const list = getTrips();
-  const idx = list.findIndex(t => String(t.id) === String(id));
-  if (idx !== -1) {
-    list[idx] = { ...list[idx], ...body } as any;
-    setTrips(list);
-    return list[idx];
-  }
-  throw new Error('Trip not found');
+  return request<any>(`/api/v1/trip/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function setTripStatus(id: string, status: string, odometer?: number) {
-  const list = getTrips();
-  const idx = list.findIndex(t => String(t.id) === String(id));
-  if (idx !== -1) {
-    list[idx].status = status as any;
-    if (status === 'completed') {
-      list[idx].completedAt = new Date().toISOString();
-    } else if (status === 'dispatched' || status === 'in_progress') {
-      list[idx].dispatchedAt = new Date().toISOString();
-    }
-    setTrips(list);
-    return list[idx];
+  let url = `/api/v1/trip/${id}/status?status=${status}`;
+  if (odometer !== undefined && odometer !== null) {
+    url += `&odometer=${odometer}`;
   }
-  throw new Error('Trip not found');
+  return request<any>(url, {
+    method: 'PUT',
+  });
 }
 
-// Maintenance API mocks
+// Maintenance API
 export async function fetchMaintenanceLogs() {
-  return getMaintenance();
+  return request<any[]>('/api/v1/maintenance');
 }
 
 export async function createMaintenanceLog(body: Record<string, unknown>) {
-  const list = getMaintenance();
-  const newLog = {
-    id: 'm_' + Math.random().toString(36).substr(2, 9),
-    vehicleId: String(body.vehicleId),
-    type: (body.type || 'general_service') as any,
-    description: String(body.description || ''),
-    status: 'scheduled' as const,
-    scheduledDate: String(body.scheduledDate || new Date().toISOString().split('T')[0]),
-    cost: Number(body.cost || 0),
-    serviceProvider: String(body.serviceProvider || 'Local Workshop'),
-  };
-  list.push(newLog);
-  setMaintenance(list);
-  return newLog;
+  return request<any>('/api/v1/maintenance', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function setMaintenanceStatus(id: string, status: string) {
-  const list = getMaintenance();
-  const idx = list.findIndex(m => String(m.id) === String(id));
-  if (idx !== -1) {
-    list[idx].status = status as any;
-    if (status === 'completed') {
-      list[idx].completedDate = new Date().toISOString().split('T')[0];
-    }
-    setMaintenance(list);
-    return list[idx];
-  }
-  throw new Error('Maintenance log not found');
+  return request<any>(`/api/v1/maintenance/${id}/status?status=${status}`, {
+    method: 'PUT',
+  });
 }
 
-// Fuel API mocks
+// Fuel logs mapped to Expense Service under 'fuel' category
 export async function fetchFuelLogs() {
-  return getFuel();
+  const expenses = await request<any[]>('/api/v1/expense');
+  return expenses
+    .filter(exp => exp.category === 'fuel')
+    .map(exp => {
+      let parsed = { liters: 0, odometerReading: 0, station: exp.description || 'Fuel Station' };
+      try {
+        if (exp.description && exp.description.trim().startsWith('{')) {
+          parsed = JSON.parse(exp.description);
+        }
+      } catch (_) {}
+      return {
+        id: exp.id,
+        vehicleId: exp.vehicleId,
+        liters: parsed.liters || 50,
+        cost: exp.amount,
+        date: exp.date,
+        odometerReading: parsed.odometerReading || 120000,
+        station: parsed.station || exp.description || 'Fuel Station',
+      };
+    });
 }
 
 export async function createFuelLog(body: Record<string, unknown>) {
-  const list = getFuel();
-  const newLog = {
-    id: 'f_' + Math.random().toString(36).substr(2, 9),
-    vehicleId: String(body.vehicleId),
+  const descObj = {
     liters: Number(body.liters || 0),
-    cost: Number(body.cost || 0),
-    date: String(body.date || new Date().toISOString().split('T')[0]),
     odometerReading: Number(body.odometerReading || 0),
-    station: String(body.station || 'Fuel Station'),
+    station: String(body.station || 'Fuel Station')
   };
-  list.push(newLog);
-  setFuel(list);
-  return newLog;
+
+  const expBody = {
+    vehicleId: body.vehicleId,
+    category: 'fuel',
+    amount: Number(body.cost || 0),
+    date: body.date,
+    description: JSON.stringify(descObj)
+  };
+
+  const exp = await request<any>('/api/v1/expense', {
+    method: 'POST',
+    body: JSON.stringify(expBody),
+  });
+
+  return {
+    id: exp.id,
+    vehicleId: exp.vehicleId,
+    liters: descObj.liters,
+    cost: exp.amount,
+    date: exp.date,
+    odometerReading: descObj.odometerReading,
+    station: descObj.station,
+  };
 }
 
-// Dashboard KPIs API Mock
+// Dashboard KPIs calculated dynamically based on real data
 export async function fetchDashboardKPIs() {
-  const vehicles = getVehicles();
-  const trips = getTrips();
-  
-  const activeFleet = vehicles.filter(v => v.status === 'on_trip').length;
-  const maintenanceAlerts = vehicles.filter(v => v.status === 'in_shop').length;
-  const totalVehicles = vehicles.filter(v => v.status !== 'retired').length;
+  const [vehicles, trips] = await Promise.all([
+    fetchVehicles(),
+    fetchTrips(),
+  ]);
+
+  const activeFleet = (vehicles || []).filter(v => v.status === 'on_trip').length;
+  const maintenanceAlerts = (vehicles || []).filter(v => v.status === 'in_shop').length;
+  const totalVehicles = (vehicles || []).filter(v => v.status !== 'retired').length;
   const utilizationRate = totalVehicles > 0 ? Math.round((activeFleet / totalVehicles) * 100) : 0;
-  const pendingCargo = trips.filter(t => t.status === 'draft').length;
-  
+  const pendingCargo = (trips || []).filter(t => t.status === 'draft').length;
+
   return {
     activeFleet,
     maintenanceAlerts,
