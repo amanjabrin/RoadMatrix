@@ -10,7 +10,7 @@ import {
   FileSpreadsheet,
   FileText,
 } from 'lucide-react';
-import { cn, formatNumber, generateId } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ const vehicleTypeIcons = {
 };
 
 export function VehicleRegistry() {
-  const { state, dispatch, getVehicleOperationalCost, getVehicleROI, hasRole, apiAddVehicle, apiUpdateVehicle, apiSetVehicleStatus } = useFleet();
+  const { state, getVehicleOperationalCost, getVehicleROI, hasRole, apiAddVehicle, apiUpdateVehicle, apiSetVehicleStatus } = useFleet();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<VehicleType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all');
