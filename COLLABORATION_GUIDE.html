@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadMatrix Team GitHub Collaboration Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #30f2ff;
+      --accent-hover: #00d4e6;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --success: #27d796;
+      --warning: #f5a623;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.65;
+      padding: 2rem 1rem;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(48, 242, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(39, 215, 150, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 3rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    h1, h2, h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      background: linear-gradient(135deg, #ffffff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 2.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 1.8rem;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      margin-top: 1.8rem;
+      color: var(--accent);
+    }
+
+    p {
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      font-size: 1.05rem;
+    }
+
+    strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    th, td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      background-color: rgba(255, 255, 255, 0.01);
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-muted);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-muted);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    li::marker {
+      color: var(--accent);
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #ff79c6;
+    }
+
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      background: #060913;
+      padding: 1.25rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: #f8f8f2;
+      font-size: 0.92rem;
+    }
+
+    .keyword { color: #ff79c6; }
+    .comment { color: #6272a4; }
+    .string { color: #f1fa8c; }
+    .number { color: #bd93f9; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .alert {
+      border-left: 4px solid var(--warning);
+      background: rgba(245, 166, 35, 0.05);
+      border-radius: 0 12px 12px 0;
+    }
+
+    .alert-success {
+      border-left: 4px solid var(--success);
+      background: rgba(39, 215, 150, 0.05);
+      border-radius: 0 12px 12px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-dev-a { background: rgba(48, 242, 255, 0.15); color: var(--accent); }
+    .badge-dev-b { background: rgba(39, 215, 150, 0.15); color: var(--success); }
+    .badge-dev-c { background: rgba(245, 166, 35, 0.15); color: var(--warning); }
+
+    .step-number {
+      background: var(--accent);
+      color: var(--bg-color);
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.5rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      pre {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>RoadMatrix Team GitHub Collaboration Guide</h1>
+    <p>This guide explains how a <strong>3-member development team</strong> can share and push the RoadMatrix codebase to GitHub, ensuring that everyone makes <strong>multiple small, incremental, descriptive commits</strong> to establish a realistic development contribution history.</p>
+
+    <div class="card alert alert-success">
+      <p>💡 <strong>Feature-Based Ownership:</strong> Each developer owns specific features <strong>end-to-end</strong>, committing both the backend microservices and their corresponding React frontend screens.</p>
+    </div>
+
+    <h2>1. Feature & Ownership Division</h2>
+    <p>To divide contributions equally and create a rich commit history, commit scopes are assigned as follows:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Developer</th>
+          <th>Assigned Scope (Backend + Frontend Pages)</th>
+          <th>Key Responsibilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-dev-a">Developer A</span></td>
+          <td>
+            <strong>Infrastructure & Fleet Feature</strong><br>
+            - <code>backend/service-registry</code><br>
+            - <code>backend/config-server</code><br>
+            - <code>backend/api-gateway</code><br>
+            - <code>backend/fleet-service</code><br>
+            - <code>app/...</code> (Vehicle Registry & Dashboard UI)
+          </td>
+          <td>Core infrastructure, routing, registry, database and UI for vehicle registry and tracking.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-dev-b">Developer B</span></td>
+          <td>
+            <strong>Auth, Drivers & Expense Features</strong><br>
+            - <code>backend/auth-service</code><br>
+            - <code>backend/driver-service</code><br>
+            - <code>backend/expense-service</code><br>
+            - <code>app/...</code> (Login, Drivers & Expenses UI)
+          </td>
+          <td>Security authentication, driver profiles/attendances, and operational fuel expenses logs (API + UI).</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-dev-c">Developer C</span></td>
+          <td>
+            <strong>Company, Trips, Maintenance & Reports</strong><br>
+            - <code>backend/company-service</code><br>
+            - <code>backend/trip-service</code><br>
+            - <code>backend/maintenance-service</code><br>
+            - <code>backend/notification-service</code><br>
+            - <code>backend/report-service</code><br>
+            - <code>app/...</code> (Trip Dispatcher, Maintenance & Analytics UI)
+          </td>
+          <td>Multi-tenant company configuration, trip dispatch workflows, service logs schedules, notifications, and analytics dashboard reports (API + UI).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Granular Commit History Plan</h2>
+    <p>To make the history look like a real, feature-driven project, each developer must push their changes using multiple small commits:</p>
+
+    <div class="card">
+      <h3>Developer A (Infrastructure & Fleet - 7 Commits)</h3>
+      <ul>
+        <li><strong>Commit A1</strong>: <code>chore: initialize repository and add base maven, react configs</code></li>
+        <li><strong>Commit A2</strong>: <code>feat(infra): add Eureka Service Registry and Config Server local setups</code></li>
+        <li><strong>Commit A3</strong>: <code>feat(infra): add API Gateway with service routing and CORS headers</code></li>
+        <li><strong>Commit A4</strong>: <code>feat(fleet): implement fleet-service backend vehicle JPA controllers</code></li>
+        <li><strong>Commit A5</strong>: <code>feat(fleet): add database seeder for fleet-service PostgreSQL database</code></li>
+        <li><strong>Commit A6</strong>: <code>feat(frontend): create base UI layout, navigation, and dashboard shell</code></li>
+        <li><strong>Commit A7</strong>: <code>feat(frontend): integrate Vehicle Registry screen with fleet-service API</code></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Developer B (Auth, Drivers & Expenses - 8 Commits)</h3>
+      <ul>
+        <li><strong>Commit B1</strong>: <code>feat(auth): implement auth-service JWT utility and backend user databases</code></li>
+        <li><strong>Commit B2</strong>: <code>feat(auth-ui): create login screen, forgot password forms, and AuthContext</code></li>
+        <li><strong>Commit B3</strong>: <code>feat(driver): implement driver-service profiles and category tracking</code></li>
+        <li><strong>Commit B4</strong>: <code>feat(driver-ui): create Drivers directory UI and registry interface</code></li>
+        <li><strong>Commit B5</strong>: <code>feat(expense): implement expense-service backend database structure</code></li>
+        <li><strong>Commit B6</strong>: <code>feat(expense): add expense-service fuel logs seeder</code></li>
+        <li><strong>Commit B7</strong>: <code>feat(expense-ui): create Expenses log registry and fuel efficiency dashboard</code></li>
+        <li><strong>Commit B8</strong>: <code>refactor: clean up frontend auth and driver typescript compiler checks</code></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Developer C (Company, Trips, Maintenance & Reports - 9 Commits)</h3>
+      <ul>
+        <li><strong>Commit C1</strong>: <code>feat(company): implement company-service multi-tenant branch profiles</code></li>
+        <li><strong>Commit C2</strong>: <code>feat(trip): implement trip-service dispatcher and LoadBalanced status sync</code></li>
+        <li><strong>Commit C3</strong>: <code>feat(trip-ui): create Trip Dispatcher registry interface and dispatch workflow</code></li>
+        <li><strong>Commit C4</strong>: <code>feat(maintenance): implement maintenance-service service logs scheduler</code></li>
+        <li><strong>Commit C5</strong>: <code>feat(maintenance-ui): create Maintenance scheduler logs and service alerts UI</code></li>
+        <li><strong>Commit C6</strong>: <code>feat(notification): add notification-service alert routing and audit logs</code></li>
+        <li><strong>Commit C7</strong>: <code>feat(report): add report-service analytics aggregation endpoints</code></li>
+        <li><strong>Commit C8</strong>: <code>feat(report-ui): create Analytics dashboard panels and Recharts charts integration</code></li>
+        <li><strong>Commit C9</strong>: <code>refactor: perform project build checks and finalize collaboration guides</code></li>
+      </ul>
+    </div>
+
+    <h2>3. Step-by-Step GitHub Execution Plan</h2>
+
+    <h3><span class="step-number">1</span> Initialize Git & Push Base Files (Developer A)</h3>
+    <p>On the machine containing the complete codebase, Developer A initializes the project and pushes the shared configuration:</p>
+    <pre><code><span class="comment"># Initialize repository</span>
+git init
+git remote add origin https://github.com/your-username/RoadMatrix.git
+
+<span class="comment"># Add base configuration and guide files</span>
+git add .gitignore pom.xml .env COLLABORATION_GUIDE.md COLLABORATION_GUIDE.html
+git commit -m "chore: initial project configuration and collaboration guide"
+git branch -M main
+git push -u origin main</code></pre>
+
+    <h3><span class="step-number">2</span> Push Infrastructure & Fleet Changes (Developer A)</h3>
+    <p>Developer A commits their assigned features in logical steps and pushes them:</p>
+    <pre><code><span class="comment"># Commit Service Registry & Config Server</span>
+git add backend/service-registry/ backend/config-server/
+git commit -m "feat(infra): add Eureka Service Registry and Config Server local setups"
+
+<span class="comment"># Commit API Gateway</span>
+git add backend/api-gateway/
+git commit -m "feat(infra): add API Gateway with service routing and CORS headers"
+
+<span class="comment"># Commit Fleet Service Backend</span>
+git add backend/fleet-service/
+git commit -m "feat(fleet): implement fleet-service backend vehicle JPA controllers and database seeder"
+
+<span class="comment"># Commit Frontend Layout and Vehicle Registry UI</span>
+git add app/src/components/ app/src/pages/VehicleRegistry.tsx app/src/pages/Dashboard.tsx app/package.json app/tsconfig.json app/vite.config.ts app/index.html app/postcss.config.js app/tailwind.config.js
+git commit -m "feat(frontend): create base UI layout, navigation, and vehicle registry integration"
+
+<span class="comment"># Push all Developer A commits</span>
+git push origin main</code></pre>
+
+    <h3><span class="step-number">3</span> Commit and Push Auth, Drivers & Expenses (Developer B)</h3>
+    <p>Developer B clones the repo, copies their assigned folders (both backend services and React pages) into their local clone, and commits them in parts:</p>
+    <pre><code><span class="comment"># Clone repository</span>
+git clone https://github.com/your-username/RoadMatrix.git
+cd RoadMatrix
+
+<span class="comment"># Rebase to stay in sync</span>
+git pull origin main --rebase
+
+<span class="comment"># Commit Auth Backend & UI</span>
+git add backend/auth-service/ app/src/pages/Login.tsx app/src/pages/ForgotPassword.tsx app/src/pages/ResetPassword.tsx app/src/context/
+git commit -m "feat(auth): implement auth-service JWT token utilities and login screen"
+
+<span class="comment"># Commit Driver Backend & UI</span>
+git add backend/driver-service/ app/src/pages/Drivers.tsx
+git commit -m "feat(driver): implement driver-service profiles and frontend drivers registry"
+
+<span class="comment"># Commit Expense Backend & UI</span>
+git add backend/expense-service/ app/src/pages/Expenses.tsx app/src/lib/api.ts
+git commit -m "feat(expense): implement expense-service fuel logs database and frontend Expenses screen"
+
+<span class="comment"># Push Developer B commits</span>
+git push origin main</code></pre>
+
+    <h3><span class="step-number">4</span> Commit and Push Company, Trips, Maintenance & Reports (Developer C)</h3>
+    <p>Developer C clones the repo, copies their assigned folders into their local clone, and commits them in groups:</p>
+    <pre><code><span class="comment"># Clone repository</span>
+git clone https://github.com/your-username/RoadMatrix.git
+cd RoadMatrix
+
+<span class="comment"># Rebase to stay in sync</span>
+git pull origin main --rebase
+
+<span class="comment"># Commit Company & Trip Workflow</span>
+git add backend/company-service/ backend/trip-service/ app/src/pages/TripDispatcher.tsx
+git commit -m "feat(trip): implement trip-service dispatcher database and frontend Trip Dispatcher"
+
+<span class="comment"># Commit Maintenance Scheduler</span>
+git add backend/maintenance-service/ app/src/pages/Maintenance.tsx
+git commit -m "feat(maintenance): add maintenance-service logs and frontend Maintenance log schedule"
+
+<span class="comment"># Commit Notification, Report & Analytics UI</span>
+git add backend/notification-service/ backend/report-service/ app/src/pages/Analytics.tsx app/src/pages/Settings.tsx
+git commit -m "feat(analytics): add report-service analytics and frontend Analytics panel"
+
+<span class="comment"># Push all Developer C commits</span>
+git push origin main</code></pre>
+
+    <h2>4. Important Rules for Team Collaboration</h2>
+    <div class="card alert">
+      <p>⚠️ <strong>Never Commit Local Credentials:</strong> Ensure <code>.env</code> is <strong>never</strong> added to Git. Each developer must copy <code>.env</code> locally with their system's PostgreSQL username and password.</p>
+    </div>
+    <div class="card alert alert-success">
+      <p>✔️ <strong>Rebase Before Pushing:</strong> To avoid merge commits and conflicts, always run <code>git pull origin main --rebase</code> before pushing any new commits.</p>
+    </div>
+  </div>
+
+</body>
+</html>
