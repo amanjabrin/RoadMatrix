@@ -1,4 +1,3 @@
-// Simulated Developer B collaboration
 import { useState } from 'react';
 import { useFleet } from '@/context/FleetContext';
 import { 

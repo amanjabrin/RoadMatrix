@@ -1,4 +1,3 @@
-// Simulated Developer B collaboration
 import { useState, useMemo } from 'react';
 import { useFleet } from '@/context/FleetContext';
 import { useChartTheme } from '@/hooks/useChartTheme';

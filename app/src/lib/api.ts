@@ -34,7 +34,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export async function login(email: string, password?: string) {
-  const res = await request<{ token: string; email: string; name: string; role: string; companyId: string }>(
+  const res = await request<{
+    success: boolean;
+    token: string;
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      companyId: string;
+    };
+  }>(
     '/api/v1/auth/login',
     {
       method: 'POST',
@@ -43,10 +53,10 @@ export async function login(email: string, password?: string) {
   );
   localStorage.setItem('roadmatrix_token', res.token);
   return {
-    id: res.companyId,
-    email: res.email,
-    name: res.name,
-    role: res.role as any,
+    id: res.user.id,
+    email: res.user.email,
+    name: res.user.name,
+    role: res.user.role as any,
   };
 }
 
