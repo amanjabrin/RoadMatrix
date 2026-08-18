@@ -14,8 +14,8 @@ export function Login({ onForgotPassword }: LoginProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { login } = useFleet();
   const isDark = resolvedTheme !== 'light';
-  const [email, setEmail] = useState('admin@roadmatrix.in');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
