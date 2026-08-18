@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { MaintenanceLog, MaintenanceType, MaintenanceStatus } from '@/types';
+import type { MaintenanceType, MaintenanceStatus } from '@/types';
 
 const maintenanceTypes: { value: MaintenanceType; label: string }[] = [
   { value: 'oil_change', label: 'Oil Change' },
@@ -50,7 +50,7 @@ const maintenanceTypes: { value: MaintenanceType; label: string }[] = [
 ];
 
 export function Maintenance() {
-  const { state, dispatch, getVehicleById, getMaintenanceAlerts, hasRole, apiAddMaintenance, apiSetMaintenanceStatus } = useFleet();
+  const { state, getVehicleById, getMaintenanceAlerts, hasRole, apiAddMaintenance, apiSetMaintenanceStatus } = useFleet();
   
   // Only Safety Officer can add maintenance / Log Service (Fleet Manager view only, no actions)
   const canManage = hasRole(['safety_officer']);

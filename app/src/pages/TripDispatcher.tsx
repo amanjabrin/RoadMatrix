@@ -49,7 +49,6 @@ import type { TripStatus } from '@/types';
 export function TripDispatcher() {
   const { 
     state, 
-    dispatch, 
     getAvailableVehicles, 
     getAvailableDrivers, 
     getVehicleById, 
