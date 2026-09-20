@@ -14,7 +14,8 @@ import {
   Download,
   CheckCircle2,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Radio
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,16 +39,20 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { ServiceNotConnected } from '@/components/common/ServiceNotConnected';
 
 const COLORS = ['#30F2FF', '#27D796', '#F5A623', '#FF4D6D', '#A6ACB8'];
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export function Analytics() {
-  const { state, getVehicleROI, getVehicleById, getVehicleOperationalCost, getFuelEfficiency, hasRole } = useFleet();
+  const { state, loadData, getVehicleROI, getVehicleById, getVehicleOperationalCost, getFuelEfficiency, hasRole } = useFleet();
   const chartTheme = useChartTheme();
   const [showHealthAudit, setShowHealthAudit] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  const isServiceConnected = state.servicesHealth.report;
 
   const canExport = hasRole(['fleet_manager', 'financial_analyst']);
 
@@ -237,8 +242,35 @@ export function Analytics() {
     };
   }, [state.vehicles, state.drivers, state.maintenanceLogs]);
 
+  if (!isServiceConnected && !isDemoMode) {
+    return (
+      <ServiceNotConnected
+        serviceName="Analytics & Report Generation Service"
+        serviceId="report-service"
+        port={8089}
+        route="/api/v1/report/**"
+        description="Executive financial reporting, multi-metric business intelligence, and vehicle ROI calculation microservice."
+        onRetry={loadData}
+        onToggleDemoMode={() => setIsDemoMode(true)}
+        isDemoMode={isDemoMode}
+      />
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
+      {isDemoMode && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-amber-400" />
+            <span><strong>Demo Wireframe Mode:</strong> Backend microservice (<code className="font-mono text-amber-200">report-service :8089</code>) is offline. Showing sample layout for evaluation.</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setIsDemoMode(false)} className="text-xs h-7 border-amber-500/40 text-amber-300 hover:bg-amber-500/20">
+            Exit Demo
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

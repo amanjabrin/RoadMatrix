@@ -2,6 +2,7 @@ package com.roadmatrix.expense_service.controller;
 
 import com.roadmatrix.expense_service.dto.ExpenseDto;
 import com.roadmatrix.expense_service.service.ExpenseService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<ExpenseDto> createExpense(@RequestBody ExpenseDto dto) {
+    public ResponseEntity<ExpenseDto> createExpense(@Valid @RequestBody ExpenseDto dto) {
         return ResponseEntity.ok(expenseService.createExpense(dto));
     }
 

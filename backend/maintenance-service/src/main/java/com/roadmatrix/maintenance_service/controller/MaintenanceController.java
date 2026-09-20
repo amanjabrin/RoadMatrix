@@ -2,6 +2,7 @@ package com.roadmatrix.maintenance_service.controller;
 
 import com.roadmatrix.maintenance_service.dto.MaintenanceLogDto;
 import com.roadmatrix.maintenance_service.service.MaintenanceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class MaintenanceController {
     }
 
     @PostMapping
-    public ResponseEntity<MaintenanceLogDto> createLog(@RequestBody MaintenanceLogDto dto) {
+    public ResponseEntity<MaintenanceLogDto> createLog(@Valid @RequestBody MaintenanceLogDto dto) {
         return ResponseEntity.ok(maintenanceService.createLog(dto));
     }
 

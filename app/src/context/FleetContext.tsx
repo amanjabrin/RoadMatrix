@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import type {
   Vehicle,
+  VehicleType,
   Driver,
   Trip,
   MaintenanceLog,
@@ -11,8 +12,22 @@ import type {
   DriverStatus,
   TripStatus,
   MaintenanceStatus,
+  ServiceHealthMap,
 } from '@/types';
 import * as api from '@/lib/api';
+
+const defaultServicesHealth: ServiceHealthMap = {
+  eureka: true,
+  gateway: true,
+  auth: true,
+  fleet: true,
+  maintenance: true,
+  expense: true,
+  driver: false,
+  trip: false,
+  report: false,
+  notification: false,
+};
 
 // State Interface
 interface FleetState {
@@ -28,6 +43,7 @@ interface FleetState {
   selectedTripId: string | null;
   loading: boolean;
   error: string | null;
+  servicesHealth: ServiceHealthMap;
 }
 
 const initialState: FleetState = {
@@ -43,12 +59,14 @@ const initialState: FleetState = {
   selectedTripId: null,
   loading: false,
   error: null,
+  servicesHealth: defaultServicesHealth,
 };
 
 type FleetAction =
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
-  | { type: 'SET_DATA'; payload: { vehicles: Vehicle[]; drivers: Driver[]; trips: Trip[]; maintenanceLogs: MaintenanceLog[]; fuelLogs: FuelLog[] } }
+  | { type: 'SET_DATA'; payload: { vehicles: Vehicle[]; drivers: Driver[]; trips: Trip[]; maintenanceLogs: MaintenanceLog[]; fuelLogs: FuelLog[]; servicesHealth?: ServiceHealthMap } }
+  | { type: 'SET_SERVICES_HEALTH'; payload: ServiceHealthMap }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'ADD_VEHICLE'; payload: Vehicle }
@@ -79,7 +97,15 @@ function fleetReducer(state: FleetState, action: FleetAction): FleetState {
     case 'LOGOUT':
       return { ...initialState };
     case 'SET_DATA':
-      return { ...state, ...action.payload, loading: false, error: null };
+      return { 
+        ...state, 
+        ...action.payload, 
+        servicesHealth: action.payload.servicesHealth || state.servicesHealth,
+        loading: false, 
+        error: null 
+      };
+    case 'SET_SERVICES_HEALTH':
+      return { ...state, servicesHealth: action.payload };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_ERROR':
@@ -166,75 +192,76 @@ interface FleetContextType {
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
 function normalizeVehicle(v: any): Vehicle {
+  const type: VehicleType = (v.type === 'truck' || v.type === 'van' || v.type === 'bike') ? v.type : 'truck';
   return {
-    id: String(v.id),
-    name: v.name,
-    model: v.model,
-    licensePlate: v.licensePlate ?? v.license_plate,
-    type: v.type,
-    maxLoadCapacity: v.maxLoadCapacity ?? v.max_load_capacity ?? 0,
-    odometer: v.odometer ?? 0,
-    status: v.status,
-    acquisitionCost: v.acquisitionCost ?? v.acquisition_cost ?? 0,
-    year: v.year,
-    fuelType: v.fuelType ?? v.fuel_type,
-    region: v.region,
+    id: String(v.id || ''),
+    name: v.name || 'Unnamed Vehicle',
+    model: v.model || 'Standard',
+    licensePlate: v.licensePlate ?? v.license_plate ?? 'N/A',
+    type,
+    maxLoadCapacity: Number(v.maxLoadCapacity ?? v.max_load_capacity ?? 0),
+    odometer: Number(v.odometer ?? 0),
+    status: (v.status === 'available' || v.status === 'on_trip' || v.status === 'in_shop' || v.status === 'retired') ? v.status : 'available',
+    acquisitionCost: Number(v.acquisitionCost ?? v.acquisition_cost ?? 0),
+    year: Number(v.year ?? 2024),
+    fuelType: (v.fuelType === 'gasoline' || v.fuelType === 'electric') ? v.fuelType : 'diesel',
+    region: v.region || 'West',
   };
 }
 function normalizeDriver(d: any): Driver {
   return {
-    id: String(d.id),
-    name: d.name,
-    email: d.email,
-    phone: d.phone,
-    licenseNumber: d.licenseNumber ?? d.license_number,
-    licenseExpiry: d.licenseExpiry ?? d.license_expiry,
-    licenseCategories: d.licenseCategories ?? d.license_categories ?? [],
-    status: d.status,
-    safetyScore: d.safetyScore ?? d.safety_score ?? 0,
-    joinDate: d.joinDate ?? d.join_date,
-    totalTrips: d.totalTrips ?? d.total_trips ?? 0,
-    completedTrips: d.completedTrips ?? d.completed_trips ?? 0,
+    id: String(d.id || ''),
+    name: d.name || 'Unnamed Driver',
+    email: d.email || '',
+    phone: d.phone || '',
+    licenseNumber: d.licenseNumber ?? d.license_number ?? 'N/A',
+    licenseExpiry: d.licenseExpiry ?? d.license_expiry ?? new Date().toISOString().slice(0, 10),
+    licenseCategories: Array.isArray(d.licenseCategories) ? d.licenseCategories : Array.isArray(d.license_categories) ? d.license_categories : ['truck'],
+    status: (d.status === 'on_duty' || d.status === 'on_trip' || d.status === 'off_duty' || d.status === 'suspended') ? d.status : 'on_duty',
+    safetyScore: Number(d.safetyScore ?? d.safety_score ?? 85),
+    joinDate: d.joinDate ?? d.join_date ?? new Date().toISOString().slice(0, 10),
+    totalTrips: Number(d.totalTrips ?? d.total_trips ?? 0),
+    completedTrips: Number(d.completedTrips ?? d.completed_trips ?? 0),
   };
 }
 function normalizeTrip(t: any): Trip {
   return {
-    id: String(t.id),
-    vehicleId: String(t.vehicleId ?? t.vehicle_id ?? t.vehicle),
-    driverId: String(t.driverId ?? t.driver_id ?? t.driver),
-    cargoWeight: t.cargoWeight ?? t.cargo_weight ?? 0,
-    origin: t.origin,
-    destination: t.destination,
-    status: t.status,
-    createdAt: t.createdAt ?? t.created_at,
+    id: String(t.id || ''),
+    vehicleId: String(t.vehicleId ?? t.vehicle_id ?? t.vehicle ?? ''),
+    driverId: String(t.driverId ?? t.driver_id ?? t.driver ?? ''),
+    cargoWeight: Number(t.cargoWeight ?? t.cargo_weight ?? 0),
+    origin: t.origin || '',
+    destination: t.destination || '',
+    status: t.status || 'draft',
+    createdAt: t.createdAt ?? t.created_at ?? new Date().toISOString(),
     dispatchedAt: t.dispatchedAt ?? t.dispatched_at,
     completedAt: t.completedAt ?? t.completed_at,
-    distance: t.distance,
-    revenue: t.revenue,
+    distance: Number(t.distance ?? 0),
+    revenue: Number(t.revenue ?? 0),
   };
 }
 function normalizeMaintenance(m: any): MaintenanceLog {
   return {
-    id: String(m.id),
-    vehicleId: String(m.vehicleId ?? m.vehicle_id ?? m.vehicle),
-    type: m.type,
-    description: m.description ?? '',
-    status: m.status,
-    scheduledDate: m.scheduledDate ?? m.scheduled_date,
+    id: String(m.id || ''),
+    vehicleId: String(m.vehicleId ?? m.vehicle_id ?? m.vehicle ?? ''),
+    type: m.type || 'preventive',
+    description: m.description || '',
+    status: (m.status === 'scheduled' || m.status === 'in_progress' || m.status === 'completed') ? m.status : 'scheduled',
+    scheduledDate: m.scheduledDate ?? m.scheduled_date ?? new Date().toISOString().slice(0, 10),
     completedDate: m.completedDate ?? m.completed_date,
-    cost: m.cost ?? 0,
-    serviceProvider: m.serviceProvider ?? m.service_provider,
+    cost: Number(m.cost ?? 0),
+    serviceProvider: m.serviceProvider ?? m.service_provider ?? 'Internal Workshop',
   };
 }
 function normalizeFuel(f: any): FuelLog {
   return {
-    id: String(f.id),
-    vehicleId: String(f.vehicleId ?? f.vehicle_id ?? f.vehicle),
-    liters: f.liters ?? 0,
-    cost: f.cost ?? 0,
-    date: f.date,
-    odometerReading: f.odometerReading ?? f.odometer_reading ?? 0,
-    station: f.station,
+    id: String(f.id || ''),
+    vehicleId: String(f.vehicleId ?? f.vehicle_id ?? f.vehicle ?? ''),
+    liters: Number(f.liters ?? 0),
+    cost: Number(f.cost ?? 0),
+    date: f.date ?? new Date().toISOString().slice(0, 10),
+    odometerReading: Number(f.odometerReading ?? f.odometer_reading ?? 0),
+    station: f.station ?? 'Station',
   };
 }
 
@@ -257,28 +284,48 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
   const loadData = useCallback(async () => {
     if (!api.isAuthenticated()) return;
     dispatch({ type: 'SET_LOADING', payload: true });
+    
     try {
-      const [vehicles, drivers, trips, maintenance, fuel] = await Promise.all([
+      const [vehiclesRes, driversRes, tripsRes, maintenanceRes, fuelRes] = await Promise.allSettled([
         api.fetchVehicles(),
         api.fetchDrivers(),
         api.fetchTrips(),
         api.fetchMaintenanceLogs(),
         api.fetchFuelLogs(),
       ]);
+
+      const vehicles = vehiclesRes.status === 'fulfilled' && Array.isArray(vehiclesRes.value) ? vehiclesRes.value : [];
+      const drivers = driversRes.status === 'fulfilled' && Array.isArray(driversRes.value) ? driversRes.value : [];
+      const trips = tripsRes.status === 'fulfilled' && Array.isArray(tripsRes.value) ? tripsRes.value : [];
+      const maintenance = maintenanceRes.status === 'fulfilled' && Array.isArray(maintenanceRes.value) ? maintenanceRes.value : [];
+      const fuel = fuelRes.status === 'fulfilled' && Array.isArray(fuelRes.value) ? fuelRes.value : [];
+
+      const newHealth: ServiceHealthMap = {
+        eureka: true,
+        gateway: true,
+        auth: true,
+        fleet: vehiclesRes.status === 'fulfilled',
+        maintenance: maintenanceRes.status === 'fulfilled',
+        expense: fuelRes.status === 'fulfilled',
+        driver: driversRes.status === 'fulfilled',
+        trip: tripsRes.status === 'fulfilled',
+        report: false,
+        notification: false,
+      };
+
       dispatch({
         type: 'SET_DATA',
         payload: {
-          vehicles: (vehicles || []).map(normalizeVehicle),
-          drivers: (drivers || []).map(normalizeDriver),
-          trips: (trips || []).map(normalizeTrip),
-          maintenanceLogs: (maintenance || []).map(normalizeMaintenance),
-          fuelLogs: (fuel || []).map(normalizeFuel),
+          vehicles: vehicles.map(normalizeVehicle),
+          drivers: drivers.map(normalizeDriver),
+          trips: trips.map(normalizeTrip),
+          maintenanceLogs: maintenance.map(normalizeMaintenance),
+          fuelLogs: fuel.map(normalizeFuel),
+          servicesHealth: newHealth,
         },
       });
     } catch (err) {
       dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
-      dispatch({ type: 'LOGOUT' });
-      api.logout();
     }
   }, []);
 

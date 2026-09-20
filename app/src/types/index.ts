@@ -186,3 +186,17 @@ export interface MaintenanceLogForm {
   scheduledDate: string;
   cost: number;
 }
+
+export interface ServiceHealthMap {
+  eureka: boolean;
+  gateway: boolean;
+  auth: boolean;
+  fleet: boolean;
+  maintenance: boolean;
+  expense: boolean;
+  driver: boolean;
+  trip: boolean;
+  report: boolean;
+  notification: boolean;
+}
+

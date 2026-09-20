@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useFleet } from '@/context/FleetContext';
-import { Search, Bell, Plus, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Plus, Sun, Moon, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MicroserviceStatusModal } from '@/components/common/MicroserviceStatusModal';
 
 interface HeaderProps {
   onPageChange: (page: string) => void;
@@ -26,9 +27,10 @@ interface HeaderProps {
 
 export function Header({ onPageChange }: HeaderProps) {
   const { theme, setTheme } = useTheme();
-  const { state, getAvailableVehicles, getAvailableDrivers, validateCargoWeight, canDriverOperateVehicle, isLicenseValid, apiAddTrip, hasRole } = useFleet();
+  const { state, loadData, getAvailableVehicles, getAvailableDrivers, validateCargoWeight, canDriverOperateVehicle, isLicenseValid, apiAddTrip, hasRole } = useFleet();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   
   // Only Dispatcher can create trips (Fleet Manager is view-only)
   const canCreateTrips = hasRole(['dispatcher']);
@@ -108,7 +110,24 @@ export function Header({ onPageChange }: HeaderProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/* Microservices Architecture Health Indicator */}
+        <button
+          type="button"
+          onClick={() => setIsStatusModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/60 text-xs font-medium text-foreground transition-all duration-200"
+          title="Click to view Microservices Architecture Topology Health"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <Cpu className="w-3.5 h-3.5 text-[#30F2FF]" />
+          <span className="font-mono text-xs font-semibold">
+            Services: {Object.values(state.servicesHealth).filter(Boolean).length}/11 Live
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -219,6 +238,13 @@ export function Header({ onPageChange }: HeaderProps) {
           </DialogContent>
         </Dialog>
         )}
+
+        <MicroserviceStatusModal
+          isOpen={isStatusModalOpen}
+          onOpenChange={setIsStatusModalOpen}
+          healthMap={state.servicesHealth}
+          onRefresh={loadData}
+        />
       </div>
     </header>
   );

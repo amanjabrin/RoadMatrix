@@ -20,6 +20,7 @@ import {
   Loader2,
   FileSpreadsheet,
   FileText,
+  Radio,
 } from 'lucide-react';
 import { cn, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,10 +46,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { TripStatus } from '@/types';
+import { ServiceNotConnected } from '@/components/common/ServiceNotConnected';
+import { mockTrips } from '@/data/mockData';
 
 export function TripDispatcher() {
   const { 
     state, 
+    loadData,
     getAvailableVehicles, 
     getAvailableDrivers, 
     getVehicleById, 
@@ -69,6 +73,10 @@ export function TripDispatcher() {
   const [statusFilter, setStatusFilter] = useState<TripStatus | 'all'>('all');
   const [completeTripId, setCompleteTripId] = useState<string | null>(null);
   const [completeOdometer, setCompleteOdometer] = useState('');
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  const isServiceConnected = state.servicesHealth.trip;
+  const activeTripsList = isServiceConnected ? state.trips : (isDemoMode ? mockTrips : []);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -81,15 +89,15 @@ export function TripDispatcher() {
 
   // Trip status counts for dashboard
   const tripCounts = useMemo(() => ({
-    draft: state.trips.filter(t => t.status === 'draft').length,
-    dispatched: state.trips.filter(t => t.status === 'dispatched').length,
-    in_progress: state.trips.filter(t => t.status === 'in_progress').length,
-    completed: state.trips.filter(t => t.status === 'completed').length,
-    cancelled: state.trips.filter(t => t.status === 'cancelled').length,
-  }), [state.trips]);
+    draft: activeTripsList.filter(t => t.status === 'draft').length,
+    dispatched: activeTripsList.filter(t => t.status === 'dispatched').length,
+    in_progress: activeTripsList.filter(t => t.status === 'in_progress').length,
+    completed: activeTripsList.filter(t => t.status === 'completed').length,
+    cancelled: activeTripsList.filter(t => t.status === 'cancelled').length,
+  }), [activeTripsList]);
 
   // Filter trips
-  const filteredTrips = state.trips.filter((trip) => {
+  const filteredTrips = activeTripsList.filter((trip) => {
     if (statusFilter === 'all') return true;
     return trip.status === statusFilter;
   });
@@ -105,10 +113,12 @@ export function TripDispatcher() {
     }
     const vehicle = getVehicleById(formData.vehicleId);
     const cargoWeight = parseFloat(formData.cargoWeight);
+
     if (!validateCargoWeight(formData.vehicleId, cargoWeight)) {
-      setError(`Cargo weight (${cargoWeight}kg) exceeds vehicle capacity (${vehicle?.maxLoadCapacity}kg)`);
+      setError(`Cargo weight exceeds vehicle capacity (${vehicle?.maxLoadCapacity} kg)`);
       return;
     }
+
     if (!canDriverOperateVehicle(formData.driverId, vehicle?.type || '')) {
       setError('Driver is not licensed to operate this vehicle type');
       return;
@@ -133,7 +143,7 @@ export function TripDispatcher() {
   };
 
   const handleUpdateStatus = (tripId: string, newStatus: TripStatus) => {
-    const trip = state.trips.find(t => t.id === tripId);
+    const trip = activeTripsList.find(t => t.id === tripId);
     if (!trip) return;
     if (newStatus === 'completed') {
       setCompleteTripId(tripId);
@@ -146,7 +156,7 @@ export function TripDispatcher() {
 
   const confirmCompleteTrip = async () => {
     if (!completeTripId) return;
-    const trip = state.trips.find(t => t.id === completeTripId);
+    const trip = activeTripsList.find(t => t.id === completeTripId);
     if (!trip) return;
     const odometer = parseInt(completeOdometer, 10);
     await apiSetTripStatus(completeTripId, 'completed', isNaN(odometer) ? undefined : odometer);
@@ -185,8 +195,35 @@ export function TripDispatcher() {
     }
   };
 
+  if (!isServiceConnected && !isDemoMode) {
+    return (
+      <ServiceNotConnected
+        serviceName="Trip Dispatcher & Route Service"
+        serviceId="trip-service"
+        port={8085}
+        route="/api/v1/trip/**"
+        description="Cargo logistics, load capacity checks, driver dispatching, and trip routing microservice."
+        onRetry={loadData}
+        onToggleDemoMode={() => setIsDemoMode(true)}
+        isDemoMode={isDemoMode}
+      />
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
+      {isDemoMode && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-amber-400" />
+            <span><strong>Demo Wireframe Mode:</strong> Backend microservice (<code className="font-mono text-amber-200">trip-service :8085</code>) is offline. Showing sample layout for evaluation.</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setIsDemoMode(false)} className="text-xs h-7 border-amber-500/40 text-amber-300 hover:bg-amber-500/20">
+            Exit Demo
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

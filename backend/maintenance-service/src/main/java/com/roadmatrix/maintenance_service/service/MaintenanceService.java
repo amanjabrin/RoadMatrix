@@ -40,15 +40,22 @@ public class MaintenanceService {
         return mapToDto(logEntity);
     }
 
+    private static final java.util.Set<String> VALID_STATUSES = java.util.Set.of("scheduled", "in_progress", "completed");
+
     public MaintenanceLogDto createLog(MaintenanceLogDto dto) {
+        String status = dto.getStatus() != null ? dto.getStatus().toLowerCase().trim() : "scheduled";
+        if (!VALID_STATUSES.contains(status)) {
+            throw new com.roadmatrix.maintenance_service.exception.BadRequestException("Invalid maintenance status '" + dto.getStatus() + "'. Allowed values: " + VALID_STATUSES);
+        }
+
         MaintenanceLog logEntity = MaintenanceLog.builder()
                 .vehicleId(dto.getVehicleId())
-                .type(dto.getType())
-                .description(dto.getDescription())
-                .status("scheduled")
+                .type(dto.getType().toLowerCase().trim())
+                .description(dto.getDescription().trim())
+                .status(status)
                 .scheduledDate(dto.getScheduledDate() != null ? dto.getScheduledDate() : LocalDate.now())
                 .cost(dto.getCost() != null ? dto.getCost() : 0.0)
-                .serviceProvider(dto.getServiceProvider() != null ? dto.getServiceProvider() : "Local Workshop")
+                .serviceProvider(dto.getServiceProvider() != null ? dto.getServiceProvider().trim() : "Local Workshop")
                 .notes(dto.getNotes())
                 .companyId(dto.getCompanyId() != null ? dto.getCompanyId() : UUID.fromString("11111111-1111-1111-1111-111111111111"))
                 .build();
@@ -62,14 +69,19 @@ public class MaintenanceService {
 
     public void updateStatus(UUID id, String status) {
         MaintenanceLog logEntity = logRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance log not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Maintenance log with ID '" + id + "' not found"));
 
-        logEntity.setStatus(status);
-        if ("completed".equals(status)) {
+        String normalizedStatus = status != null ? status.toLowerCase().trim() : "";
+        if (!VALID_STATUSES.contains(normalizedStatus)) {
+            throw new com.roadmatrix.maintenance_service.exception.BadRequestException("Invalid maintenance status '" + status + "'. Allowed values: " + VALID_STATUSES);
+        }
+
+        logEntity.setStatus(normalizedStatus);
+        if ("completed".equals(normalizedStatus)) {
             logEntity.setCompletedDate(LocalDate.now());
             // Put vehicle back in available pool
             updateVehicleStatus(logEntity.getVehicleId(), "available");
-        } else if ("in_progress".equals(status)) {
+        } else if ("in_progress".equals(normalizedStatus)) {
             updateVehicleStatus(logEntity.getVehicleId(), "in_shop");
         }
 

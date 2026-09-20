@@ -27,29 +27,32 @@ export function formatDateTime(dateString: string): string {
 }
 
 // Currency formatting (INR)
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | undefined | null): string {
+  const val = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(val);
 }
 
 // Number formatting
-export function formatNumber(num: number, decimals = 0): string {
+export function formatNumber(num: number | undefined | null, decimals = 0): string {
+  const val = typeof num === 'number' && !isNaN(num) ? num : 0;
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(num);
+  }).format(val);
 }
 
 // Format large numbers (K, M)
-export function formatCompact(num: number): string {
+export function formatCompact(num: number | undefined | null): string {
+  const val = typeof num === 'number' && !isNaN(num) ? num : 0;
   return new Intl.NumberFormat('en-US', {
     notation: 'compact',
     compactDisplay: 'short',
-  }).format(num);
+  }).format(val);
 }
 
 // Status color helpers

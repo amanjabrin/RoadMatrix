@@ -12,7 +12,8 @@ import {
   XCircle,
   Filter,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Radio
 } from 'lucide-react';
 import { cn, formatDate, daysUntilExpiry } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,8 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Driver, DriverStatus, LicenseCategory } from '@/types';
+import { ServiceNotConnected } from '@/components/common/ServiceNotConnected';
+import { mockDrivers } from '@/data/mockData';
 
 const licenseCategories: { value: LicenseCategory; label: string }[] = [
   { value: 'truck', label: 'Truck' },
@@ -41,11 +44,15 @@ const licenseCategories: { value: LicenseCategory; label: string }[] = [
 ];
 
 export function Drivers() {
-  const { state, isLicenseValid, hasRole, apiAddDriver, apiSetDriverStatus } = useFleet();
+  const { state, loadData, isLicenseValid, hasRole, apiAddDriver, apiSetDriverStatus } = useFleet();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DriverStatus | 'all'>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  const isServiceConnected = state.servicesHealth.driver;
+  const activeDriversList = isServiceConnected ? state.drivers : (isDemoMode ? mockDrivers : []);
 
   const canAdd = hasRole(['fleet_manager']);
   const canChangeStatus = hasRole(['safety_officer']);
@@ -69,11 +76,15 @@ export function Drivers() {
   });
 
   // Filter drivers
-  const filteredDrivers = state.drivers.filter((driver) => {
+  const filteredDrivers = activeDriversList.filter((driver) => {
+    const name = driver.name || '';
+    const email = driver.email || '';
+    const licenseNumber = driver.licenseNumber || '';
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
-      driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      driver.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      driver.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      name.toLowerCase().includes(q) ||
+      email.toLowerCase().includes(q) ||
+      licenseNumber.toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -208,8 +219,35 @@ export function Drivers() {
     </div>
   );
 
+  if (!isServiceConnected && !isDemoMode) {
+    return (
+      <ServiceNotConnected
+        serviceName="Driver Management Service"
+        serviceId="driver-service"
+        port={8084}
+        route="/api/v1/driver/**"
+        description="Driver records, performance safety scoring, and compliance verification microservice."
+        onRetry={loadData}
+        onToggleDemoMode={() => setIsDemoMode(true)}
+        isDemoMode={isDemoMode}
+      />
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
+      {isDemoMode && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-amber-400" />
+            <span><strong>Demo Wireframe Mode:</strong> Backend microservice (<code className="font-mono text-amber-200">driver-service :8084</code>) is offline. Showing sample layout for evaluation.</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setIsDemoMode(false)} className="text-xs h-7 border-amber-500/40 text-amber-300 hover:bg-amber-500/20">
+            Exit Demo
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

@@ -65,10 +65,14 @@ export function VehicleRegistry() {
 
   // Filter vehicles
   const filteredVehicles = state.vehicles.filter((vehicle) => {
+    const name = vehicle.name || '';
+    const licensePlate = vehicle.licensePlate || '';
+    const model = vehicle.model || '';
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
-      vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vehicle.licensePlate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vehicle.model.toLowerCase().includes(searchQuery.toLowerCase());
+      name.toLowerCase().includes(q) ||
+      licensePlate.toLowerCase().includes(q) ||
+      model.toLowerCase().includes(q);
     const matchesType = typeFilter === 'all' || vehicle.type === typeFilter;
     const matchesStatus = statusFilter === 'all' || vehicle.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
@@ -322,8 +326,9 @@ export function VehicleRegistry() {
       {/* Vehicle Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredVehicles.map((vehicle) => {
-          const Icon = vehicleTypeIcons[vehicle.type];
-          const roi = getVehicleROI(vehicle.id);
+          const Icon = (vehicle.type && vehicleTypeIcons[vehicle.type]) ? vehicleTypeIcons[vehicle.type] : Truck;
+          const roi = getVehicleROI(vehicle.id) || { revenue: 0, costs: 0, roi: 0 };
+          const roiVal = typeof roi?.roi === 'number' && !isNaN(roi.roi) ? roi.roi : 0;
           return (
             <div
               key={vehicle.id}
@@ -336,21 +341,21 @@ export function VehicleRegistry() {
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold text-foreground">{vehicle.name}</h3>
-              <p className="text-sm text-muted-foreground">{vehicle.model}</p>
+              <h3 className="text-lg font-semibold text-foreground">{vehicle.name || 'Unnamed Vehicle'}</h3>
+              <p className="text-sm text-muted-foreground">{vehicle.model || 'Standard'}</p>
               
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">License Plate</span>
-                  <span className="text-foreground mono">{vehicle.licensePlate}</span>
+                  <span className="text-foreground mono">{vehicle.licensePlate || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Max Load</span>
-                  <span className="text-foreground">{formatNumber(vehicle.maxLoadCapacity)} kg</span>
+                  <span className="text-foreground">{formatNumber(vehicle.maxLoadCapacity ?? 0)} kg</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Odometer</span>
-                  <span className="text-foreground">{formatNumber(vehicle.odometer)} km</span>
+                  <span className="text-foreground">{formatNumber(vehicle.odometer ?? 0)} km</span>
                 </div>
               </div>
 
@@ -366,9 +371,9 @@ export function VehicleRegistry() {
                 </span>
                 <span className={cn(
                   'text-xs font-medium',
-                  roi.roi >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  roiVal >= 0 ? 'text-emerald-400' : 'text-rose-400'
                 )}>
-                  ROI: {roi.roi.toFixed(0)}%
+                  ROI: {roiVal.toFixed(0)}%
                 </span>
               </div>
             </div>
@@ -480,25 +485,33 @@ export function VehicleRegistry() {
                   <div className="space-y-3">
                     <div className="flex justify-between py-2 border-b border-border/30">
                       <span className="text-muted-foreground">Acquisition Cost</span>
-                      <span className="text-foreground">₹{formatNumber(selectedVehicle.acquisitionCost)}</span>
+                      <span className="text-foreground">₹{formatNumber(selectedVehicle.acquisitionCost ?? 0)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-border/30">
                       <span className="text-muted-foreground">Operational Cost</span>
-                      <span className="text-foreground">₹{formatNumber(getVehicleOperationalCost(selectedVehicle.id))}</span>
+                      <span className="text-foreground">₹{formatNumber(getVehicleOperationalCost(selectedVehicle.id) ?? 0)}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-border/30">
-                      <span className="text-muted-foreground">Revenue</span>
-                      <span className="text-foreground">₹{formatNumber(getVehicleROI(selectedVehicle.id).revenue)}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-border/30">
-                      <span className="text-muted-foreground">ROI</span>
-                      <span className={cn(
-                        'font-medium',
-                        getVehicleROI(selectedVehicle.id).roi >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      )}>
-                        {getVehicleROI(selectedVehicle.id).roi.toFixed(1)}%
-                      </span>
-                    </div>
+                    {(() => {
+                      const vRoi = getVehicleROI(selectedVehicle.id) || { revenue: 0, costs: 0, roi: 0 };
+                      const vRoiVal = typeof vRoi?.roi === 'number' && !isNaN(vRoi.roi) ? vRoi.roi : 0;
+                      return (
+                        <>
+                          <div className="flex justify-between py-2 border-b border-border/30">
+                            <span className="text-muted-foreground">Revenue</span>
+                            <span className="text-foreground">₹{formatNumber(vRoi.revenue ?? 0)}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-border/30">
+                            <span className="text-muted-foreground">ROI</span>
+                            <span className={cn(
+                              'font-medium',
+                              vRoiVal >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            )}>
+                              {vRoiVal.toFixed(1)}%
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

@@ -2,6 +2,7 @@ package com.roadmatrix.fleet_service.controller;
 
 import com.roadmatrix.fleet_service.dto.VehicleDto;
 import com.roadmatrix.fleet_service.service.VehicleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class VehicleController {
     }
 
     @PostMapping
-    public ResponseEntity<VehicleDto> createVehicle(@RequestBody VehicleDto dto) {
+    public ResponseEntity<VehicleDto> createVehicle(@Valid @RequestBody VehicleDto dto) {
         return ResponseEntity.ok(vehicleService.createVehicle(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<VehicleDto> updateVehicle(@PathVariable UUID id, @RequestBody VehicleDto dto) {
+    public ResponseEntity<VehicleDto> updateVehicle(@PathVariable UUID id, @Valid @RequestBody VehicleDto dto) {
         return ResponseEntity.ok(vehicleService.updateVehicle(id, dto));
     }
 
