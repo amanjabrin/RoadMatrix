@@ -19,8 +19,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let errMsg = `Request failed: ${response.status} ${response.statusText}`;
     try {
       const errBody = await response.json();
-      if (errBody && errBody.message) {
-        errMsg = errBody.message;
+      if (errBody) {
+        if (Array.isArray(errBody.errors) && errBody.errors.length > 0) {
+          errMsg = errBody.errors.join('; ');
+        } else if (errBody.message) {
+          errMsg = errBody.message;
+        }
       }
     } catch (_) {}
     throw new Error(errMsg);
@@ -144,6 +148,10 @@ export async function fetchTrips() {
   return request<any[]>('/api/v1/trip');
 }
 
+export async function fetchTripById(id: string) {
+  return request<any>(`/api/v1/trip/${id}`);
+}
+
 export async function createTrip(body: Record<string, unknown>) {
   return request<any>('/api/v1/trip', {
     method: 'POST',
@@ -155,6 +163,12 @@ export async function updateTrip(id: string, body: Record<string, unknown>) {
   return request<any>(`/api/v1/trip/${id}`, {
     method: 'PUT',
     body: JSON.stringify(body),
+  });
+}
+
+export async function deleteTrip(id: string) {
+  return request<void>(`/api/v1/trip/${id}`, {
+    method: 'DELETE',
   });
 }
 

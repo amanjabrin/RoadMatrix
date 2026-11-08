@@ -183,6 +183,8 @@ interface FleetContextType {
   apiAddDriver: (data: Record<string, unknown>) => Promise<Driver | null>;
   apiSetDriverStatus: (id: string, status: DriverStatus) => Promise<void>;
   apiAddTrip: (data: Record<string, unknown>) => Promise<Trip | null>;
+  apiUpdateTrip: (id: string, data: Record<string, unknown>) => Promise<Trip | null>;
+  apiDeleteTrip: (id: string) => Promise<void>;
   apiSetTripStatus: (id: string, status: TripStatus, odometer?: number) => Promise<void>;
   apiAddMaintenance: (data: Record<string, unknown>) => Promise<MaintenanceLog | null>;
   apiSetMaintenanceStatus: (id: string, status: MaintenanceStatus) => Promise<void>;
@@ -489,32 +491,80 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
 
   const apiAddTrip = useCallback(async (data: Record<string, unknown>) => {
     try {
-      const res = await api.createTrip({
-        vehicleId: data.vehicleId, driverId: data.driverId, cargoWeight: data.cargoWeight,
-        origin: data.origin, destination: data.destination, status: 'draft',
-      });
+      const payload: Record<string, unknown> = {
+        vehicleId: data.vehicleId,
+        driverId: data.driverId,
+        cargoWeight: Number(data.cargoWeight),
+        origin: data.origin,
+        destination: data.destination,
+        status: data.status || 'draft',
+      };
+      if (data.distance !== undefined && data.distance !== null && data.distance !== '') {
+        payload.distance = Number(data.distance);
+      }
+      if (data.revenue !== undefined && data.revenue !== null && data.revenue !== '') {
+        payload.revenue = Number(data.revenue);
+      }
+      if (data.companyId) {
+        payload.companyId = data.companyId;
+      }
+      const res = await api.createTrip(payload);
       const t = normalizeTrip(res);
       dispatch({ type: 'ADD_TRIP', payload: t });
       return t;
-    } catch { return null; }
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
   }, []);
+
+  const apiUpdateTrip = useCallback(async (id: string, data: Record<string, unknown>) => {
+    try {
+      const res = await api.updateTrip(id, data);
+      const t = normalizeTrip(res);
+      dispatch({ type: 'UPDATE_TRIP', payload: t });
+      return t;
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
+  const apiDeleteTrip = useCallback(async (id: string) => {
+    try {
+      await api.deleteTrip(id);
+      dispatch({ type: 'DELETE_TRIP', payload: id });
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
   const apiSetTripStatus = useCallback(async (id: string, status: TripStatus, odometer?: number) => {
     try {
-      await api.setTripStatus(id, status, odometer);
-      dispatch({ type: 'SET_TRIP_STATUS', payload: { id, status } });
+      const res = await api.setTripStatus(id, status, odometer);
+      if (res && res.id) {
+        dispatch({ type: 'UPDATE_TRIP', payload: normalizeTrip(res) });
+      } else {
+        dispatch({ type: 'SET_TRIP_STATUS', payload: { id, status } });
+      }
       const trip = state.trips.find(t => String(t.id) === id);
-      if (trip) {
+      const vehicleId = res?.vehicleId ? String(res.vehicleId) : trip?.vehicleId;
+      if (vehicleId) {
         if (status === 'completed' || status === 'cancelled') {
-          dispatch({ type: 'SET_VEHICLE_STATUS', payload: { id: trip.vehicleId, status: 'available' } });
+          dispatch({ type: 'SET_VEHICLE_STATUS', payload: { id: vehicleId, status: 'available' } });
           if (odometer != null) {
-            const v = state.vehicles.find(x => String(x.id) === trip.vehicleId);
+            const v = state.vehicles.find(x => String(x.id) === vehicleId);
             if (v) dispatch({ type: 'UPDATE_VEHICLE', payload: { ...v, odometer } });
           }
         } else if (status === 'dispatched' || status === 'in_progress') {
-          dispatch({ type: 'SET_VEHICLE_STATUS', payload: { id: trip.vehicleId, status: 'on_trip' } });
+          dispatch({ type: 'SET_VEHICLE_STATUS', payload: { id: vehicleId, status: 'on_trip' } });
         }
       }
-    } catch (e) { throw e; }
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: (e as Error).message });
+      throw e;
+    }
   }, [state.trips, state.vehicles]);
 
   const apiAddMaintenance = useCallback(async (data: Record<string, unknown>) => {
@@ -576,6 +626,8 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
         apiAddDriver,
         apiSetDriverStatus,
         apiAddTrip,
+        apiUpdateTrip,
+        apiDeleteTrip,
         apiSetTripStatus,
         apiAddMaintenance,
         apiSetMaintenanceStatus,
