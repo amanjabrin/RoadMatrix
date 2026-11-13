@@ -42,9 +42,4 @@ backend/*/target/
 mvnw
 mvnw.cmd
 
-# Agentic / AI scratch and config files
-.gemini/
-.agents/
-walkthrough.md
-implementation_plan.md
-task.md
+
