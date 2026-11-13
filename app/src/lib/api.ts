@@ -123,6 +123,10 @@ export async function fetchDrivers() {
   return request<any[]>('/api/v1/driver');
 }
 
+export async function fetchDriverById(id: string) {
+  return request<any>(`/api/v1/driver/${id}`);
+}
+
 export async function createDriver(body: Record<string, unknown>) {
   return request<any>('/api/v1/driver', {
     method: 'POST',
@@ -134,6 +138,12 @@ export async function updateDriver(id: string, body: Record<string, unknown>) {
   return request<any>(`/api/v1/driver/${id}`, {
     method: 'PUT',
     body: JSON.stringify(body),
+  });
+}
+
+export async function deleteDriver(id: string) {
+  return request<void>(`/api/v1/driver/${id}`, {
+    method: 'DELETE',
   });
 }
 

@@ -181,6 +181,8 @@ interface FleetContextType {
   apiUpdateVehicle: (id: string, data: Record<string, unknown>) => Promise<Vehicle | null>;
   apiSetVehicleStatus: (id: string, status: VehicleStatus) => Promise<void>;
   apiAddDriver: (data: Record<string, unknown>) => Promise<Driver | null>;
+  apiUpdateDriver: (id: string, data: Record<string, unknown>) => Promise<Driver | null>;
+  apiDeleteDriver: (id: string) => Promise<void>;
   apiSetDriverStatus: (id: string, status: DriverStatus) => Promise<void>;
   apiAddTrip: (data: Record<string, unknown>) => Promise<Trip | null>;
   apiUpdateTrip: (id: string, data: Record<string, unknown>) => Promise<Trip | null>;
@@ -480,13 +482,46 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
       const d = normalizeDriver(res);
       dispatch({ type: 'ADD_DRIVER', payload: d });
       return d;
-    } catch { return null; }
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
   }, []);
+
+  const apiUpdateDriver = useCallback(async (id: string, data: Record<string, unknown>) => {
+    try {
+      const res = await api.updateDriver(id, data);
+      const d = normalizeDriver(res);
+      dispatch({ type: 'UPDATE_DRIVER', payload: d });
+      return d;
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
+  const apiDeleteDriver = useCallback(async (id: string) => {
+    try {
+      await api.deleteDriver(id);
+      dispatch({ type: 'DELETE_DRIVER', payload: id });
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
   const apiSetDriverStatus = useCallback(async (id: string, status: DriverStatus) => {
     try {
-      await api.setDriverStatus(id, status);
-      dispatch({ type: 'SET_DRIVER_STATUS', payload: { id, status } });
-    } catch (e) { throw e; }
+      const res = await api.setDriverStatus(id, status);
+      if (res && res.id) {
+        dispatch({ type: 'UPDATE_DRIVER', payload: normalizeDriver(res) });
+      } else {
+        dispatch({ type: 'SET_DRIVER_STATUS', payload: { id, status } });
+      }
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: (e as Error).message });
+      throw e;
+    }
   }, []);
 
   const apiAddTrip = useCallback(async (data: Record<string, unknown>) => {
@@ -624,6 +659,8 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
         apiUpdateVehicle,
         apiSetVehicleStatus,
         apiAddDriver,
+        apiUpdateDriver,
+        apiDeleteDriver,
         apiSetDriverStatus,
         apiAddTrip,
         apiUpdateTrip,
