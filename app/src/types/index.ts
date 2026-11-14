@@ -200,3 +200,12 @@ export interface ServiceHealthMap {
   notification: boolean;
 }
 
+export interface SavedReport {
+  id: string;
+  name: string;
+  type: 'fleet' | 'driver' | 'fuel' | 'trip' | 'maintenance' | 'summary';
+  generatedBy?: string;
+  generatedAt?: string;
+  companyId?: string;
+}
+

@@ -285,3 +285,45 @@ export async function fetchDashboardKPIs() {
     pendingCargo
   };
 }
+
+// Reports & Analytics API
+export async function fetchAnalyticsSummary(companyId?: string) {
+  return request<any>(`/api/v1/report/summary${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchFleetReport(companyId?: string) {
+  return request<any>(`/api/v1/report/fleet${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchDriverReport(companyId?: string) {
+  return request<any>(`/api/v1/report/driver${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchFuelReport(companyId?: string) {
+  return request<any>(`/api/v1/report/fuel${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchMaintenanceReport(companyId?: string) {
+  return request<any>(`/api/v1/report/maintenance${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchTripReport(companyId?: string) {
+  return request<any>(`/api/v1/report/trip${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function fetchSavedReports(companyId?: string) {
+  return request<any[]>(`/api/v1/report/saved${companyId ? `?companyId=${companyId}` : ''}`);
+}
+
+export async function createSavedReport(body: Record<string, unknown>) {
+  return request<any>('/api/v1/report/saved', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteSavedReport(id: string) {
+  return request<void>(`/api/v1/report/saved/${id}`, {
+    method: 'DELETE',
+  });
+}

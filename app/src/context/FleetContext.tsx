@@ -6,6 +6,7 @@ import type {
   Trip,
   MaintenanceLog,
   FuelLog,
+  SavedReport,
   User,
   UserRole,
   VehicleStatus,
@@ -38,6 +39,7 @@ interface FleetState {
   trips: Trip[];
   maintenanceLogs: MaintenanceLog[];
   fuelLogs: FuelLog[];
+  savedReports: SavedReport[];
   selectedVehicleId: string | null;
   selectedDriverId: string | null;
   selectedTripId: string | null;
@@ -54,6 +56,7 @@ const initialState: FleetState = {
   trips: [],
   maintenanceLogs: [],
   fuelLogs: [],
+  savedReports: [],
   selectedVehicleId: null,
   selectedDriverId: null,
   selectedTripId: null,
@@ -65,7 +68,7 @@ const initialState: FleetState = {
 type FleetAction =
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
-  | { type: 'SET_DATA'; payload: { vehicles: Vehicle[]; drivers: Driver[]; trips: Trip[]; maintenanceLogs: MaintenanceLog[]; fuelLogs: FuelLog[]; servicesHealth?: ServiceHealthMap } }
+  | { type: 'SET_DATA'; payload: { vehicles: Vehicle[]; drivers: Driver[]; trips: Trip[]; maintenanceLogs: MaintenanceLog[]; fuelLogs: FuelLog[]; savedReports?: SavedReport[]; servicesHealth?: ServiceHealthMap } }
   | { type: 'SET_SERVICES_HEALTH'; payload: ServiceHealthMap }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
@@ -88,7 +91,9 @@ type FleetAction =
   | { type: 'UPDATE_MAINTENANCE'; payload: MaintenanceLog }
   | { type: 'SET_MAINTENANCE_STATUS'; payload: { id: string; status: MaintenanceStatus } }
   | { type: 'ADD_FUEL_LOG'; payload: FuelLog }
-  | { type: 'DELETE_FUEL_LOG'; payload: string };
+  | { type: 'DELETE_FUEL_LOG'; payload: string }
+  | { type: 'ADD_SAVED_REPORT'; payload: SavedReport }
+  | { type: 'DELETE_SAVED_REPORT'; payload: string };
 
 function fleetReducer(state: FleetState, action: FleetAction): FleetState {
   switch (action.type) {
@@ -150,6 +155,10 @@ function fleetReducer(state: FleetState, action: FleetAction): FleetState {
       return { ...state, fuelLogs: [...state.fuelLogs, action.payload] };
     case 'DELETE_FUEL_LOG':
       return { ...state, fuelLogs: state.fuelLogs.filter(f => f.id !== action.payload) };
+    case 'ADD_SAVED_REPORT':
+      return { ...state, savedReports: [action.payload, ...state.savedReports] };
+    case 'DELETE_SAVED_REPORT':
+      return { ...state, savedReports: state.savedReports.filter(r => r.id !== action.payload) };
     default:
       return state;
   }
@@ -191,6 +200,8 @@ interface FleetContextType {
   apiAddMaintenance: (data: Record<string, unknown>) => Promise<MaintenanceLog | null>;
   apiSetMaintenanceStatus: (id: string, status: MaintenanceStatus) => Promise<void>;
   apiAddFuelLog: (data: Record<string, unknown>) => Promise<FuelLog | null>;
+  apiSaveReport: (data: Record<string, unknown>) => Promise<SavedReport | null>;
+  apiDeleteSavedReport: (id: string) => Promise<void>;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
@@ -269,6 +280,17 @@ function normalizeFuel(f: any): FuelLog {
   };
 }
 
+function normalizeSavedReport(r: any): SavedReport {
+  return {
+    id: String(r.id || ''),
+    name: r.name || 'Report',
+    type: (r.type === 'fleet' || r.type === 'driver' || r.type === 'fuel' || r.type === 'trip' || r.type === 'maintenance' || r.type === 'summary') ? r.type : 'summary',
+    generatedBy: r.generatedBy ?? r.generated_by ?? 'System Administrator',
+    generatedAt: r.generatedAt ?? r.generated_at ?? new Date().toISOString(),
+    companyId: r.companyId ?? r.company_id ? String(r.companyId ?? r.company_id) : undefined,
+  };
+}
+
 const loadSavedSession = (): Partial<FleetState> => {
   try {
     const saved = localStorage.getItem('roadmatrix_session');
@@ -290,12 +312,13 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      const [vehiclesRes, driversRes, tripsRes, maintenanceRes, fuelRes] = await Promise.allSettled([
+      const [vehiclesRes, driversRes, tripsRes, maintenanceRes, fuelRes, reportsRes] = await Promise.allSettled([
         api.fetchVehicles(),
         api.fetchDrivers(),
         api.fetchTrips(),
         api.fetchMaintenanceLogs(),
         api.fetchFuelLogs(),
+        api.fetchSavedReports(),
       ]);
 
       const vehicles = vehiclesRes.status === 'fulfilled' && Array.isArray(vehiclesRes.value) ? vehiclesRes.value : [];
@@ -303,6 +326,7 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
       const trips = tripsRes.status === 'fulfilled' && Array.isArray(tripsRes.value) ? tripsRes.value : [];
       const maintenance = maintenanceRes.status === 'fulfilled' && Array.isArray(maintenanceRes.value) ? maintenanceRes.value : [];
       const fuel = fuelRes.status === 'fulfilled' && Array.isArray(fuelRes.value) ? fuelRes.value : [];
+      const reports = reportsRes.status === 'fulfilled' && Array.isArray(reportsRes.value) ? reportsRes.value : [];
 
       const newHealth: ServiceHealthMap = {
         eureka: true,
@@ -313,7 +337,7 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
         expense: fuelRes.status === 'fulfilled',
         driver: driversRes.status === 'fulfilled',
         trip: tripsRes.status === 'fulfilled',
-        report: false,
+        report: reportsRes.status === 'fulfilled',
         notification: false,
       };
 
@@ -325,6 +349,7 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
           trips: trips.map(normalizeTrip),
           maintenanceLogs: maintenance.map(normalizeMaintenance),
           fuelLogs: fuel.map(normalizeFuel),
+          savedReports: reports.map(normalizeSavedReport),
           servicesHealth: newHealth,
         },
       });
@@ -631,6 +656,28 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
     } catch { return null; }
   }, []);
 
+  const apiSaveReport = useCallback(async (data: Record<string, unknown>) => {
+    try {
+      const res = await api.createSavedReport(data);
+      const r = normalizeSavedReport(res);
+      dispatch({ type: 'ADD_SAVED_REPORT', payload: r });
+      return r;
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
+  const apiDeleteSavedReport = useCallback(async (id: string) => {
+    try {
+      await api.deleteSavedReport(id);
+      dispatch({ type: 'DELETE_SAVED_REPORT', payload: id });
+    } catch (err) {
+      dispatch({ type: 'SET_ERROR', payload: (err as Error).message });
+      throw err;
+    }
+  }, []);
+
   return (
     <FleetContext.Provider
       value={{
@@ -669,6 +716,8 @@ export function FleetProvider({ children }: { children: React.ReactNode }) {
         apiAddMaintenance,
         apiSetMaintenanceStatus,
         apiAddFuelLog,
+        apiSaveReport,
+        apiDeleteSavedReport,
       }}
     >
       {children}

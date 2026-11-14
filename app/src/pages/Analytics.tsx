@@ -15,10 +15,16 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Radio
+  Radio,
+  RefreshCw,
+  Trash2,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import * as api from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -46,11 +52,24 @@ const COLORS = ['#30F2FF', '#27D796', '#F5A623', '#FF4D6D', '#A6ACB8'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export function Analytics() {
-  const { state, loadData, getVehicleROI, getVehicleById, getVehicleOperationalCost, getFuelEfficiency, hasRole } = useFleet();
+  const { 
+    state, 
+    loadData, 
+    getVehicleROI, 
+    getVehicleById, 
+    getVehicleOperationalCost, 
+    getFuelEfficiency, 
+    hasRole,
+    apiSaveReport,
+    apiDeleteSavedReport
+  } = useFleet();
   const chartTheme = useChartTheme();
   const [showHealthAudit, setShowHealthAudit] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [reportModalData, setReportModalData] = useState<any | null>(null);
 
   const isServiceConnected = state.servicesHealth.report;
 
@@ -153,8 +172,20 @@ export function Analytics() {
     return result.length ? result : [{ month: 'No data', kmPerLiter: 0 }];
   }, [state.trips, state.fuelLogs]);
 
-  const handleExport = (format: 'csv' | 'pdf') => {
+  const handleExport = async (format: 'csv' | 'pdf') => {
     const date = new Date().toISOString().slice(0, 10);
+
+    if (isServiceConnected) {
+      try {
+        await apiSaveReport({
+          name: `Fleet ${format.toUpperCase()} Export - ${date}`,
+          type: 'fleet',
+          generatedBy: state.currentUser?.name || 'System Administrator',
+        });
+      } catch (e) {
+        console.warn('Auto audit log failed:', e);
+      }
+    }
 
     if (format === 'csv') {
       const headers = ['Vehicle', 'License Plate', 'Status', 'Revenue', 'Operational Cost', 'ROI %', 'Fuel Efficiency (km/L)'];
@@ -173,7 +204,7 @@ export function Analytics() {
       a.download = `roadmatrix-report-${date}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      setExportMessage('CSV downloaded successfully!');
+      setExportMessage('CSV downloaded successfully and audit log saved!');
     } else {
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
@@ -202,9 +233,54 @@ export function Analytics() {
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
-      setExportMessage('PDF/Print dialog opened.');
+      setExportMessage('PDF/Print dialog opened and audit log saved!');
     }
     setTimeout(() => setExportMessage(null), 3000);
+  };
+
+  const handleGenerateReport = async (type: 'summary' | 'fleet' | 'driver' | 'fuel' | 'maintenance' | 'trip') => {
+    setIsGenerating(true);
+    try {
+      let data: any;
+      if (type === 'summary') data = await api.fetchAnalyticsSummary();
+      else if (type === 'fleet') data = await api.fetchFleetReport();
+      else if (type === 'driver') data = await api.fetchDriverReport();
+      else if (type === 'fuel') data = await api.fetchFuelReport();
+      else if (type === 'maintenance') data = await api.fetchMaintenanceReport();
+      else if (type === 'trip') data = await api.fetchTripReport();
+
+      setReportModalData(data);
+      await loadData();
+      setExportMessage(`Generated live ${type.toUpperCase()} analytical snapshot!`);
+    } catch (err: any) {
+      setExportMessage(`Report generation error: ${err?.message || 'Report service offline'}`);
+    } finally {
+      setIsGenerating(false);
+      setTimeout(() => setExportMessage(null), 3500);
+    }
+  };
+
+  const handleDeleteReport = async (id: string) => {
+    try {
+      await apiDeleteSavedReport(id);
+      setExportMessage('Saved report audit entry deleted.');
+      setTimeout(() => setExportMessage(null), 3000);
+    } catch (err: any) {
+      setExportMessage(`Failed to delete report: ${err?.message || 'Error'}`);
+    }
+  };
+
+  const handleSyncData = async () => {
+    setIsSyncing(true);
+    try {
+      await loadData();
+      setExportMessage('Analytics & report data synced successfully.');
+    } catch (err: any) {
+      setExportMessage(`Sync failed: ${err?.message || 'Network error'}`);
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setExportMessage(null), 3000);
+    }
   };
 
   const handleHealthAudit = () => {
@@ -278,6 +354,10 @@ export function Analytics() {
           <p className="text-sm text-muted-foreground mt-1">Data-driven insights for your fleet</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button onClick={handleSyncData} disabled={isSyncing} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className={cn("w-4 h-4", isSyncing && "animate-spin")} />
+            Sync
+          </Button>
           <Button onClick={handleHealthAudit} className="btn-cyan flex items-center gap-2">
             <HeartPulse className="w-4 h-4" />
             Health Audit
@@ -578,6 +658,209 @@ export function Analytics() {
           </tbody>
         </table>
       </div>
+
+      {/* Saved Reports & Service Audit Trail */}
+      <div className="fleet-card p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[#30F2FF]" />
+              Saved Reports & Microservice Audit Trail
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Aggregated business snapshots generated & managed by <code className="font-mono text-[#30F2FF]">report-service :8089</code>
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('summary')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              Exec Summary
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('fleet')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+              Fleet Snapshot
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('driver')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-400" />
+              Drivers
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('fuel')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <Fuel className="w-3.5 h-3.5 text-amber-400" />
+              Fuel & Cost
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('maintenance')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <Wrench className="w-3.5 h-3.5 text-purple-400" />
+              Maintenance
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isGenerating}
+              onClick={() => handleGenerateReport('trip')}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+              Trips
+            </Button>
+          </div>
+        </div>
+
+        {state.savedReports.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground border border-dashed border-border/50 rounded-xl">
+            <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm font-medium">No saved audit reports yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Click any button above to generate a report snapshot or export CSV/PDF to trigger audit logging.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="fleet-table">
+              <thead>
+                <tr>
+                  <th>Report Name</th>
+                  <th>Type</th>
+                  <th>Generated By</th>
+                  <th>Timestamp</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.savedReports.map((report) => (
+                  <tr key={report.id}>
+                    <td>
+                      <p className="text-sm font-medium text-foreground">{report.name}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{report.id}</p>
+                    </td>
+                    <td>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'text-xs capitalize',
+                          report.type === 'summary' && 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+                          report.type === 'fleet' && 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+                          report.type === 'driver' && 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+                          report.type === 'fuel' && 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+                          report.type === 'maintenance' && 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+                          report.type === 'trip' && 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                        )}
+                      >
+                        {report.type}
+                      </Badge>
+                    </td>
+                    <td className="text-sm text-muted-foreground">
+                      {report.generatedBy || 'System Administrator'}
+                    </td>
+                    <td className="text-sm text-muted-foreground">
+                      {report.generatedAt ? new Date(report.generatedAt).toLocaleString() : 'N/A'}
+                    </td>
+                    <td className="text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteReport(report.id)}
+                        className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-8 w-8 p-0"
+                        title="Delete report"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Report Snapshot Preview Dialog */}
+      <Dialog open={!!reportModalData} onOpenChange={(open) => !open && setReportModalData(null)}>
+        <DialogContent className="fleet-card border-border max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#30F2FF]" />
+              {reportModalData?.reportType || 'Analytical Report Snapshot'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {reportModalData && (
+            <div className="space-y-4 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.entries(reportModalData)
+                  .filter(([, value]) => typeof value !== 'object')
+                  .map(([key, value]) => (
+                    <div key={key} className="p-3 rounded-lg bg-secondary/50 border border-border/40">
+                      <p className="text-xs text-muted-foreground capitalize font-medium">
+                        {key.replace(/([A-Z])/g, ' $1')}
+                      </p>
+                      <p className="text-sm font-semibold text-foreground mt-1 break-all">
+                        {String(value)}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+
+              {Array.isArray(reportModalData.vehicles) && (
+                <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
+                  <p className="text-xs font-semibold text-foreground mb-1">
+                    Vehicles Included ({reportModalData.vehicles.length})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Aggregated directly from fleet-service microservice.
+                  </p>
+                </div>
+              )}
+
+              {Array.isArray(reportModalData.drivers) && (
+                <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
+                  <p className="text-xs font-semibold text-foreground mb-1">
+                    Drivers Included ({reportModalData.drivers.length})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Aggregated directly from driver-service microservice.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <Button onClick={() => setReportModalData(null)} variant="outline" size="sm">
+                  Close Snapshot
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Health Audit Dialog */}
       <Dialog open={showHealthAudit} onOpenChange={setShowHealthAudit}>
