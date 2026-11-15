@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class RegisterRequest {
     @NotBlank(message = "Email is required")
@@ -20,4 +22,6 @@ public class RegisterRequest {
 
     @NotBlank(message = "Role is required (fleet_manager, dispatcher, safety_officer, financial_analyst)")
     private String role;
+
+    private UUID companyId;
 }

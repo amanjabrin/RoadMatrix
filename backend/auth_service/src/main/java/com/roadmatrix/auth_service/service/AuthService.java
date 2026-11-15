@@ -25,12 +25,16 @@ public class AuthService {
             throw new BadRequestException("Email is already registered");
         }
 
+        UUID effectiveCompanyId = request.getCompanyId() != null 
+                ? request.getCompanyId() 
+                : UUID.randomUUID();
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
                 .role(request.getRole())
-                .companyId(UUID.randomUUID()) // Assign a default company UUID
+                .companyId(effectiveCompanyId)
                 .build();
 
         User savedUser = userRepository.save(user);

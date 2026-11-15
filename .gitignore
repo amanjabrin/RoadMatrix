@@ -41,5 +41,7 @@ backend/*/target/
 .mvn/
 mvnw
 mvnw.cmd
+logs/
+.running_pids
 
 
